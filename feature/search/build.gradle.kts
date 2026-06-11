@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.llsit.joinsphere.feature.discover"
+    namespace = "com.llsit.joinsphere.feature.search"
     buildFeatures {
         buildConfig = true
     }

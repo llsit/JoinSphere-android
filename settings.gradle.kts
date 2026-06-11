@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             content {
@@ -24,7 +25,15 @@ dependencyResolutionManagement {
 
 rootProject.name = "JoinSphere"
 include(":app")
-include(":login")
+include(":feature:auth")
+include(":feature:discover")
+include(":feature:search")
+include(":feature:createevent")
+include(":feature:eventdetail")
+include(":feature:chat")
+include(":feature:profile")
+include(":feature:myevents")
+
 include(":core:domain")
 include(":core:data")
 include(":core:database")

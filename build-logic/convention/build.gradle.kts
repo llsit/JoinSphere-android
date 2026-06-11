@@ -7,7 +7,6 @@ group = "com.llsit.joinsphere.buildlogic"
 dependencies {
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.kotlin.gradlePlugin)
-    compileOnly(libs.ksp.gradlePlugin)
     compileOnly(libs.compose.gradlePlugin)
 }
 
@@ -15,23 +14,23 @@ gradlePlugin {
     plugins {
         register("androidLibrary") {
             id = "joinsphere.android.library"
-            implementationClass = "AndroidLibraryConventionPlugin"
+            implementationClass = "com.llsit.joinsphere.AndroidLibraryConventionPlugin"
         }
         register("androidLibraryCompose") {
             id = "joinsphere.android.library.compose"
-            implementationClass = "AndroidLibraryComposeConventionPlugin"
+            implementationClass = "com.llsit.joinsphere.AndroidLibraryComposeConventionPlugin"
         }
         register("androidApplication") {
             id = "joinsphere.android.application"
-            implementationClass = "AndroidApplicationConventionPlugin"
+            implementationClass = "com.llsit.joinsphere.AndroidApplicationConventionPlugin"
         }
         register("androidApplicationCompose") {
             id = "joinsphere.android.application.compose"
-            implementationClass = "AndroidApplicationComposeConventionPlugin"
+            implementationClass = "com.llsit.joinsphere.AndroidApplicationComposeConventionPlugin"
         }
         register("koin") {
             id = "joinsphere.koin"
-            implementationClass = "KoinConventionPlugin"
+            implementationClass = "com.llsit.joinsphere.KoinConventionPlugin"
         }
     }
 }

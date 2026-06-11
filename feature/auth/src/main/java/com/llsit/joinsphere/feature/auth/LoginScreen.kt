@@ -1,4 +1,4 @@
-package com.llsit.joinsphere.login
+package com.llsit.joinsphere.feature.auth
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +13,6 @@ fun LoginScreen() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = "Login Screen (from :login module)")
+        Text(text = "Auth Screen (from :feature:auth module)")
     }
 }
