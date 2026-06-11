@@ -23,6 +23,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        buildConfigField("String", "BASE_URL", "\"https://api.example.com/\"")
     }
 
     buildTypes {
@@ -43,6 +45,12 @@ android {
 }
 
 dependencies {
+    implementation(project(":login"))
+    implementation(project(":core:data"))
+    implementation(project(":core:design"))
+    implementation(project(":core:domain"))
+    implementation(project(":core:model"))
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)

@@ -1,6 +1,7 @@
 package com.llsit.joinsphere
 
 import android.app.Application
+import com.llsit.joinsphere.login.di.loginModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -16,7 +17,7 @@ class JoinSphereApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@JoinSphereApplication)
-            modules(emptyList()) // Add your modules here
+            modules(loginModule)
         }
     }
 }

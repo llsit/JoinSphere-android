@@ -24,3 +24,10 @@ dependencyResolutionManagement {
 
 rootProject.name = "JoinSphere"
 include(":app")
+include(":login")
+include(":core:domain")
+include(":core:data")
+include(":core:database")
+include(":core:network")
+include(":core:model")
+include(":core:design")
