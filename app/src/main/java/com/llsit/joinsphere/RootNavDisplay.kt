@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.llsit.joinsphere.feature.auth.LoginScreen
+import com.llsit.joinsphere.feature.onboarding.OnboardingScreen
 import com.llsit.navigation.AppNavigator
 import com.llsit.navigation.AuthKey
 import com.llsit.navigation.MainKey
@@ -19,11 +20,13 @@ fun RootNavDisplay(navigator: AppNavigator) {
 
             // ── Onboarding flow ───────────────────────────────────────────────
             entry<SplashKey> {
-
+                SplashScreen { startOnboarding ->
+                    navigator.proceedFromSplash(startOnboarding)
+                }
             }
 
             entry<OnboardingKey> {
-
+                OnboardingScreen(onComplete = { navigator.completeOnboarding() })
             }
 
             entry<AuthKey> {

@@ -35,6 +35,7 @@ android {
 dependencies {
     // Features
     implementation(project(":feature:auth"))
+    implementation(project(":feature:onboarding"))
     implementation(project(":feature:discover"))
     implementation(project(":feature:search"))
     implementation(project(":feature:createevent"))

@@ -1,30 +1,23 @@
 plugins {
-    alias(libs.plugins.android.library)
+    id("joinsphere.android.library.compose")
+    id("joinsphere.navigation")
 }
 
 android {
-    namespace = "com.llsit.onboarding"
-    compileSdk {
-        version = release(36)
+    namespace = "com.llsit.joinsphere.feature.onboarding"
+    buildFeatures {
+        buildConfig = true
     }
-
-    defaultConfig {
-        minSdk = 28
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-
 }
 
 dependencies {
-    implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.junit)
+    implementation(project(":core:design"))
+    implementation(project(":core:domain"))
+    implementation(project(":core:model"))
+
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.material.icons.extended)
 }
