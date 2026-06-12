@@ -32,5 +32,9 @@ gradlePlugin {
             id = "joinsphere.koin"
             implementationClass = "com.llsit.joinsphere.KoinConventionPlugin"
         }
+        register("navigation") {
+            id = "joinsphere.navigation"
+            implementationClass = "com.llsit.joinsphere.NavigationConventionPlugin"
+        }
     }
 }

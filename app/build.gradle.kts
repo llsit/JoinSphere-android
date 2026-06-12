@@ -1,6 +1,7 @@
 plugins {
     id("joinsphere.android.application.compose")
     id("joinsphere.koin")
+    id("joinsphere.navigation")
     alias(libs.plugins.ksp)
     // alias(libs.plugins.google.services)
     // alias(libs.plugins.crashlytics)
@@ -53,7 +54,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
     // Navigation Compose
-    implementation(libs.navigation.compose)
+
 
     // Firebase
     implementation(platform(libs.firebase.bom))

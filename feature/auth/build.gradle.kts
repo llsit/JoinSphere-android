@@ -1,6 +1,7 @@
 plugins {
     id("joinsphere.android.library.compose")
     id("joinsphere.koin")
+    id("joinsphere.navigation")
 }
 
 android {

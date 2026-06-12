@@ -30,6 +30,7 @@
             <option value="$PROJECT_DIR$/core/design" />
             <option value="$PROJECT_DIR$/core/domain" />
             <option value="$PROJECT_DIR$/core/model" />
+            <option value="$PROJECT_DIR$/core/navigation" />
             <option value="$PROJECT_DIR$/core/network" />
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/auth" />
@@ -38,6 +39,7 @@
             <option value="$PROJECT_DIR$/feature/discover" />
             <option value="$PROJECT_DIR$/feature/eventdetail" />
             <option value="$PROJECT_DIR$/feature/myevents" />
+            <option value="$PROJECT_DIR$/feature/onboarding" />
             <option value="$PROJECT_DIR$/feature/profile" />
             <option value="$PROJECT_DIR$/feature/search" />
           </set>

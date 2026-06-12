@@ -1,0 +1,136 @@
+package com.llsit.navigation
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.rememberNavBackStack
+
+@Stable
+class AppNavigator(
+    val rootBackStack: NavBackStack<NavKey>,
+    val discoverBackStack: NavBackStack<NavKey>,
+    val mapBackStack: NavBackStack<NavKey>,
+    val chatBackStack: NavBackStack<NavKey>,
+    val myActivitiesBackStack: NavBackStack<NavKey>,
+    val profileBackStack: NavBackStack<NavKey>,
+) {
+    // Current active tab (JoinSphere จะเริ่มที่หน้า Discover เป็นหน้าแรก)
+    var currentTab by mutableStateOf(BottomTab.Discover)
+        private set
+
+    val activeTabBackStack: NavBackStack<NavKey>
+        get() = when (currentTab) {
+            BottomTab.Discover -> discoverBackStack
+            BottomTab.Map -> mapBackStack
+            BottomTab.Chat -> chatBackStack
+            BottomTab.MyActivities -> myActivitiesBackStack
+            BottomTab.Profile -> profileBackStack
+        }
+
+    // ── Tab switching & Visibility ───────────────────────────────────────────
+    val shouldShowBottomBar: Boolean
+        get() {
+            if (rootBackStack.lastOrNull() !is MainKey) return false
+            val key = activeTabBackStack.lastOrNull()
+            // แสดง BottomBar เฉพาะเวลาที่อยู่หน้า Root ของแต่ละแท็บเท่านั้น
+            return key is DiscoverKey ||
+                    key is MapKey ||
+                    key is ChatKey ||
+                    key is MyActivitiesKey ||
+                    key is ProfileKey
+        }
+
+    fun switchTab(tab: BottomTab) {
+        currentTab = tab
+    }
+
+    // ── Navigation actions ────────────────────────────────────────────────────
+
+    fun navigateTo(key: NavKey) = activeTabBackStack.add(key)
+
+    fun goBack() {
+        if (activeTabBackStack.size > 1) {
+            activeTabBackStack.removeLastOrNull()
+        }
+    }
+
+    fun popToRoot() {
+        val root = activeTabBackStack.firstOrNull() ?: return
+        activeTabBackStack.clear()
+        activeTabBackStack.add(root)
+    }
+
+    // ── Flow Shortcuts (Splash → Onboarding → Auth → Main) ────────────────────
+
+    fun proceedFromSplash(startOnboarding: Boolean) {
+        rootBackStack.clear()
+        if (startOnboarding) {
+            rootBackStack.add(OnboardingKey)
+        } else {
+            rootBackStack.add(AuthKey)
+        }
+    }
+
+    fun completeOnboarding() {
+        rootBackStack.clear()
+        rootBackStack.add(AuthKey)
+    }
+
+    fun loginSuccess() {
+        rootBackStack.clear()
+        rootBackStack.add(MainKey) // สลับเข้าสู่หน้าหลักของแอป
+    }
+
+    // ── JoinSphere Shortcut Helpers ───────────────────────────────────────────
+
+    // เปิดหน้าค้นหา
+    fun openSearch() = navigateTo(SearchKey)
+
+    // เปิดหน้ารายละเอียดอีเวนต์ในแท็บปัจจุบันที่ผู้ใช้กำลังใช้งานอยู่
+    fun openEventDetail(eventId: String) = navigateTo(EventDetailKey(eventId))
+
+    // เปิดหน้าสร้างอีเวนต์
+    fun openCreateEvent() = navigateTo(CreateEventKey)
+
+    // เปิดห้องแชท
+    fun openChatRoom(chatId: String, roomName: String) = navigateTo(ChatRoomKey(chatId, roomName))
+
+    // เปิดหน้าแจ้งเตือน
+    fun openNotifications() = navigateTo(NotificationsKey)
+
+    // เปิดหน้าตั้งค่า (มักจะเปิดจากหน้า Profile)
+    fun openSettings() = navigateTo(SettingsKey)
+}
+
+// CompositionLocal เพื่อให้ทุก Composable เรียกใช้งาน Navigator ได้ง่ายๆ
+val LocalNavigator = compositionLocalOf<AppNavigator> {
+    error("No AppNavigator provided")
+}
+
+@Composable
+fun rememberAppNavigator(): AppNavigator {
+    val rootBackStack = rememberNavBackStack(SplashKey)
+
+    val discoverBackStack = rememberNavBackStack(DiscoverKey)
+    val mapBackStack = rememberNavBackStack(MapKey)
+    val chatBackStack = rememberNavBackStack(ChatKey)
+    val myActivitiesBackStack = rememberNavBackStack(MyActivitiesKey)
+    val profileBackStack = rememberNavBackStack(ProfileKey)
+
+    return remember {
+        AppNavigator(
+            rootBackStack = rootBackStack,
+            discoverBackStack = discoverBackStack,
+            mapBackStack = mapBackStack,
+            chatBackStack = chatBackStack,
+            myActivitiesBackStack = myActivitiesBackStack,
+            profileBackStack = profileBackStack,
+        )
+    }
+}
