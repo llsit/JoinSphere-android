@@ -27,6 +27,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.llsit.joinsphere.core.design.Button
+import com.llsit.joinsphere.core.design.ButtonVariant
 
 @Composable
 fun LoginScreen(onLogin: () -> Unit = {}) {
@@ -210,13 +212,7 @@ fun LoginScreen(onLogin: () -> Unit = {}) {
                 onClick = onLogin,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1757F0),
-                    contentColor = Color.White
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                    .height(56.dp)
             ) {
                 Text(
                     text = if (mode == "login") "Continue" else "Create account",

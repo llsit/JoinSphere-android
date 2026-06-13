@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.llsit.joinsphere.core.design.Button
 
 private val BLUE = Color(0xFF2563EB)
 private val SURFACE = Color(0xFFFFFFFF)
@@ -205,10 +206,7 @@ private fun OnboardingFlowContent(
                 onClick = onNext,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BLUE),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                    .height(56.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -293,10 +291,7 @@ private fun OnboardingCompleteScreen(
             onClick = onExplore,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(18.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = BLUE),
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                .height(56.dp)
         ) {
             Text(
                 text = "Explore activities →",

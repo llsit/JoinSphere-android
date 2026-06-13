@@ -1,6 +1,5 @@
 package com.llsit.joinsphere.feature.myevents
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,8 +14,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -26,6 +25,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.llsit.joinsphere.core.design.Button
+import com.llsit.joinsphere.core.design.ButtonSize
+import com.llsit.joinsphere.core.design.ButtonVariant
+import com.llsit.joinsphere.core.design.Card
+import com.llsit.joinsphere.core.design.Progress
 
 enum class MyEventsTab(val label: String) {
     Upcoming("Upcoming"),
@@ -164,10 +168,7 @@ fun UpcomingEventCard(
     onChatClick: () -> Unit
 ) {
     Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column {
             // Image
@@ -300,12 +301,8 @@ fun UpcomingEventCard(
                     Button(
                         onClick = onDetailsClick,
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.primary
-                        ),
-                        shape = RoundedCornerShape(16.dp),
-                        contentPadding = PaddingValues(vertical = 11.dp)
+                        variant = ButtonVariant.Secondary,
+                        size = ButtonSize.Sm
                     ) {
                         Text(text = "View details", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
@@ -313,12 +310,8 @@ fun UpcomingEventCard(
                     Button(
                         onClick = onChatClick,
                         modifier = Modifier.wrapContentWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        shape = RoundedCornerShape(16.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 11.dp)
+                        variant = ButtonVariant.Secondary,
+                        size = ButtonSize.Sm
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -361,11 +354,7 @@ fun HostingEventCard(
     onDetailsClick: () -> Unit
 ) {
     Card(
-        onClick = onDetailsClick,
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column {
             Box(modifier = Modifier.height(128.dp)) {
@@ -488,14 +477,9 @@ fun HostingEventCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                LinearProgressIndicator(
-                    progress = { event.attendees.toFloat() / event.maxAttendees },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(CircleShape),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                Progress(
+                    value = event.attendees.toFloat() / event.maxAttendees,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -505,12 +489,9 @@ fun HostingEventCard(
 @Composable
 fun PastEventCard(event: PastEvent) {
     Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(0.85f),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            .alpha(0.85f)
     ) {
         Row(modifier = Modifier.height(88.dp)) {
             AsyncImage(
@@ -562,30 +543,26 @@ fun PastEventCard(event: PastEvent) {
 
 @Composable
 fun CreateEventButton(onClick: () -> Unit) {
-    Surface(
+    Button(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = Color(0xFFEDF2FF),
-        border = BorderStroke(width = 1.5.dp, color = Color(0xFF1757F0).copy(alpha = 0.3f))
+        variant = ButtonVariant.Outline,
+        size = ButtonSize.Lg
     ) {
         Row(
-            modifier = Modifier.padding(18.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = Color(0xFF1757F0)
+                modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Create a new event",
                 fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1757F0)
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
@@ -622,7 +599,7 @@ val MOCK_ATTENDING = listOf(
         price = "Free",
         status = "confirmed",
         image = "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&h=280&fit=crop&auto=format",
-        hostAvatar = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=60&h=60&fit=crop&auto=format",
+        hostAvatar = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=60&h=80&fit=crop&auto=format",
         hostName = "Sarah Chen",
         unread = 12
     ),
