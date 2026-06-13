@@ -6,6 +6,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -19,10 +20,10 @@ class AppNavigator(
     val createBackStack: NavBackStack<NavKey>,
     val eventsBackStack: NavBackStack<NavKey>,
     val profileBackStack: NavBackStack<NavKey>,
+    initialTab: BottomTab = BottomTab.Home
 ) {
     // Current active tab (JoinSphere จะเริ่มที่หน้า Home เป็นหน้าแรก)
-    var currentTab by mutableStateOf(BottomTab.Home)
-        private set
+    var currentTab by mutableStateOf(initialTab)
 
     val activeTabBackStack: NavBackStack<NavKey>
         get() = when (currentTab) {
@@ -127,8 +128,10 @@ fun rememberAppNavigator(): AppNavigator {
     val createBackStack = rememberNavBackStack(CreateEventKey)
     val eventsBackStack = rememberNavBackStack(MyActivitiesKey)
     val profileBackStack = rememberNavBackStack(ProfileKey)
+    
+    val currentTab = rememberSaveable { mutableStateOf(BottomTab.Home) }
 
-    return remember {
+    return remember(rootBackStack, homeBackStack, searchBackStack, createBackStack, eventsBackStack, profileBackStack) {
         AppNavigator(
             rootBackStack = rootBackStack,
             homeBackStack = homeBackStack,
@@ -136,6 +139,13 @@ fun rememberAppNavigator(): AppNavigator {
             createBackStack = createBackStack,
             eventsBackStack = eventsBackStack,
             profileBackStack = profileBackStack,
-        )
+            initialTab = currentTab.value
+        ).apply {
+            // Synchronize the navigator's state with the saved state
+            this.currentTab = currentTab.value
+        }
+    }.also {
+        // Keep the saved state in sync
+        currentTab.value = it.currentTab
     }
 }

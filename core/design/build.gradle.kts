@@ -10,6 +10,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:navigation"))
     implementation(libs.material.icons.extended)
     implementation(libs.coil.compose)
 }

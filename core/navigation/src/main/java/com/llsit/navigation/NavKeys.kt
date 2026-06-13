@@ -55,12 +55,7 @@ data object CreateEventKey : NavKey
 data class ChatRoomKey(val chatId: String, val roomName: String) : NavKey
 
 
-// ===== 4. App Settings & Utilities (จากของเดิมที่คุณมี) =====
-@Serializable
-data object FocusKey : NavKey
-
-@Serializable
-data object InsightsKey : NavKey
+// ===== 4. App Settings =====
 
 @Serializable
 data object SettingsKey : NavKey
