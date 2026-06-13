@@ -182,7 +182,11 @@ val NEARBY = listOf(
 )
 
 @Composable
-fun DiscoverScreen(onEventClick: (Int) -> Unit = {}) {
+fun DiscoverScreen(
+    onEventClick: (Int) -> Unit = {},
+    onNotificationClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {}
+) {
     var activeCategory by remember { mutableStateOf("all") }
     val liked = remember { mutableStateListOf<Int>() }
 
@@ -219,7 +223,8 @@ fun DiscoverScreen(onEventClick: (Int) -> Unit = {}) {
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.5).sp,
-                        lineHeight = 28.sp
+                        lineHeight = 28.sp,
+                        modifier = Modifier.clickable { onSearchClick() }
                     )
                 }
 
@@ -227,7 +232,8 @@ fun DiscoverScreen(onEventClick: (Int) -> Unit = {}) {
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFFF3F4F6)),
+                        .background(Color(0xFFF3F4F6))
+                        .clickable { onNotificationClick() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(

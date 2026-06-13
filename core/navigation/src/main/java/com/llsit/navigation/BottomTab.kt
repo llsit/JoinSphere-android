@@ -1,11 +1,11 @@
 package com.llsit.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Explore
-import androidx.compose.material.icons.outlined.Map
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 
@@ -14,9 +14,9 @@ enum class BottomTab(
     val icon: ImageVector,
     val rootKey: NavKey
 ) {
-    Discover("Discover", Icons.Outlined.Explore, DiscoverKey),
-    Map("Map", Icons.Outlined.Map, MapKey),
-    Chat("Chat", Icons.AutoMirrored.Outlined.Chat, ChatKey),
-    MyActivities("Activities", Icons.Outlined.CalendarMonth, MyActivitiesKey),
+    Home("Home", Icons.Outlined.Home, DiscoverKey),
+    Search("Search", Icons.Outlined.Search, SearchKey),
+    Create("Create", Icons.Outlined.Add, CreateEventKey),
+    Events("Events", Icons.Outlined.CalendarMonth, MyActivitiesKey),
     Profile("Profile", Icons.Outlined.Person, ProfileKey)
 }

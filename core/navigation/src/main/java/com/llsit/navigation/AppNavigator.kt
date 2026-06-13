@@ -14,22 +14,22 @@ import androidx.navigation3.runtime.rememberNavBackStack
 @Stable
 class AppNavigator(
     val rootBackStack: NavBackStack<NavKey>,
-    val discoverBackStack: NavBackStack<NavKey>,
-    val mapBackStack: NavBackStack<NavKey>,
-    val chatBackStack: NavBackStack<NavKey>,
-    val myActivitiesBackStack: NavBackStack<NavKey>,
+    val homeBackStack: NavBackStack<NavKey>,
+    val searchBackStack: NavBackStack<NavKey>,
+    val createBackStack: NavBackStack<NavKey>,
+    val eventsBackStack: NavBackStack<NavKey>,
     val profileBackStack: NavBackStack<NavKey>,
 ) {
-    // Current active tab (JoinSphere จะเริ่มที่หน้า Discover เป็นหน้าแรก)
-    var currentTab by mutableStateOf(BottomTab.Discover)
+    // Current active tab (JoinSphere จะเริ่มที่หน้า Home เป็นหน้าแรก)
+    var currentTab by mutableStateOf(BottomTab.Home)
         private set
 
     val activeTabBackStack: NavBackStack<NavKey>
         get() = when (currentTab) {
-            BottomTab.Discover -> discoverBackStack
-            BottomTab.Map -> mapBackStack
-            BottomTab.Chat -> chatBackStack
-            BottomTab.MyActivities -> myActivitiesBackStack
+            BottomTab.Home -> homeBackStack
+            BottomTab.Search -> searchBackStack
+            BottomTab.Create -> createBackStack
+            BottomTab.Events -> eventsBackStack
             BottomTab.Profile -> profileBackStack
         }
 
@@ -40,8 +40,8 @@ class AppNavigator(
             val key = activeTabBackStack.lastOrNull()
             // แสดง BottomBar เฉพาะเวลาที่อยู่หน้า Root ของแต่ละแท็บเท่านั้น
             return key is DiscoverKey ||
-                    key is MapKey ||
-                    key is ChatKey ||
+                    key is SearchKey ||
+                    key is CreateEventKey ||
                     key is MyActivitiesKey ||
                     key is ProfileKey
         }
@@ -87,6 +87,11 @@ class AppNavigator(
         rootBackStack.add(MainKey) // สลับเข้าสู่หน้าหลักของแอป
     }
 
+    fun logout() {
+        rootBackStack.clear()
+        rootBackStack.add(AuthKey)
+    }
+
     // ── JoinSphere Shortcut Helpers ───────────────────────────────────────────
 
     // เปิดหน้าค้นหา
@@ -117,19 +122,19 @@ val LocalNavigator = compositionLocalOf<AppNavigator> {
 fun rememberAppNavigator(): AppNavigator {
     val rootBackStack = rememberNavBackStack(SplashKey)
 
-    val discoverBackStack = rememberNavBackStack(DiscoverKey)
-    val mapBackStack = rememberNavBackStack(MapKey)
-    val chatBackStack = rememberNavBackStack(ChatKey)
-    val myActivitiesBackStack = rememberNavBackStack(MyActivitiesKey)
+    val homeBackStack = rememberNavBackStack(DiscoverKey)
+    val searchBackStack = rememberNavBackStack(SearchKey)
+    val createBackStack = rememberNavBackStack(CreateEventKey)
+    val eventsBackStack = rememberNavBackStack(MyActivitiesKey)
     val profileBackStack = rememberNavBackStack(ProfileKey)
 
     return remember {
         AppNavigator(
             rootBackStack = rootBackStack,
-            discoverBackStack = discoverBackStack,
-            mapBackStack = mapBackStack,
-            chatBackStack = chatBackStack,
-            myActivitiesBackStack = myActivitiesBackStack,
+            homeBackStack = homeBackStack,
+            searchBackStack = searchBackStack,
+            createBackStack = createBackStack,
+            eventsBackStack = eventsBackStack,
             profileBackStack = profileBackStack,
         )
     }
