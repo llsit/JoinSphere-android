@@ -17,6 +17,7 @@ import com.llsit.joinsphere.feature.eventdetail.EventDetailScreen
 import com.llsit.joinsphere.feature.myevents.MyEventsScreen
 import com.llsit.joinsphere.feature.profile.ProfileScreen
 import com.llsit.joinsphere.feature.search.SearchScreen
+import com.llsit.joinsphere.feature.settings.SettingsScreen
 import com.llsit.navigation.AppNavigator
 import com.llsit.navigation.ChatKey
 import com.llsit.navigation.ChatRoomKey
@@ -85,7 +86,8 @@ private fun mainNavEntries(navigator: AppNavigator): (NavKey) -> NavEntry<NavKey
         // ── [Tab: Profile] ────────────────────────────────────────────────
         entry<ProfileKey> {
             ProfileScreen(
-                onLogout = { navigator.logout() }
+                onLogout = { navigator.logout() },
+                onSettingsClick = { navigator.openSettings() }
             )
         }
 
@@ -106,7 +108,9 @@ private fun mainNavEntries(navigator: AppNavigator): (NavKey) -> NavEntry<NavKey
         }
 
         entry<SettingsKey> {
-            PlaceholderScreen(name = "Settings")
+            SettingsScreen(
+                onBackClick = { navigator.goBack() }
+            )
         }
 
         entry<MapKey> {

@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,12 +33,6 @@ import com.llsit.joinsphere.core.design.Card
 
 data class Stat(val label: String, val value: String)
 data class Badge(val emoji: String, val label: String, val bg: Color, val color: Color)
-data class MenuItem(
-    val icon: ImageVector,
-    val label: String,
-    val sub: String,
-    val hasToggle: Boolean = false
-)
 
 val STATS = listOf(
     Stat("Attended", "47"),
@@ -63,9 +56,10 @@ val RECENT = listOf(
 )
 
 @Composable
-fun ProfileScreen(onLogout: () -> Unit = {}) {
-    var notificationsEnabled by remember { mutableStateOf(true) }
-
+fun ProfileScreen(
+    onLogout: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -405,90 +399,70 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Settings
-            Text(text = "Settings", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            // Settings link
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Settings", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Edit profile",
+                    color = Color(0xFF1757F0),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clickable { onSettingsClick() }
+                )
+            }
             Spacer(modifier = Modifier.height(12.dp))
             Card(
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onSettingsClick() }
             ) {
-                Column {
-                    val menuItems = listOf(
-                        MenuItem(
-                            Icons.Default.Notifications,
-                            "Notifications",
-                            "Customize alerts",
-                            true
-                        ),
-                        MenuItem(
-                            Icons.Default.Person,
-                            "Solo preferences",
-                            "Manage your comfort level"
-                        ),
-                        MenuItem(Icons.Default.Favorite, "Interests", "Sports, Music, Food +3"),
-                        MenuItem(Icons.Default.Lock, "Privacy", "Data and visibility settings"),
-                        MenuItem(Icons.Default.Help, "Help & Support", "FAQs and contact")
-                    )
-
-                    menuItems.forEachIndexed { index, item ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(Color(0xFFF3F4F6)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = item.icon,
-                                    contentDescription = null,
-                                    tint = Color(0xFF737880),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = item.label,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(text = item.sub, fontSize = 12.sp, color = Color(0xFF737880))
-                            }
-                            if (item.hasToggle) {
-                                Switch(
-                                    checked = notificationsEnabled,
-                                    onCheckedChange = { notificationsEnabled = it },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color.White,
-                                        checkedTrackColor = Color(0xFF1757F0),
-                                        uncheckedThumbColor = Color.White,
-                                        uncheckedTrackColor = Color(0xFFCBD0D8),
-                                        uncheckedBorderColor = Color.Transparent
-                                    )
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Outlined.ChevronRight,
-                                    contentDescription = null,
-                                    tint = Color(0xFFCBD0D8),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-                        if (index < menuItems.size - 1) {
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                color = Color(0xFF0D0F14).copy(alpha = 0.06f)
-                            )
-                        }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFF3F4F6)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = null,
+                            tint = Color(0xFF737880),
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Account settings",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "Notifications, privacy and more",
+                            fontSize = 12.sp,
+                            color = Color(0xFF737880)
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Outlined.ChevronRight,
+                        contentDescription = null,
+                        tint = Color(0xFFCBD0D8),
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Logout
             Button(
@@ -505,7 +479,12 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
                     tint = Color(0xFFDC2626)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Sign out", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFFDC2626))
+                Text(
+                    text = "Sign out",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFDC2626)
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))

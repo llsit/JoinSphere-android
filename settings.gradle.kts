@@ -33,6 +33,7 @@ include(":feature:eventdetail")
 include(":feature:chat")
 include(":feature:profile")
 include(":feature:myevents")
+include(":feature:settings")
 
 include(":core:domain")
 include(":core:data")

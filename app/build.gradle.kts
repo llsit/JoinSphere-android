@@ -43,6 +43,7 @@ dependencies {
     implementation(project(":feature:chat"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:myevents"))
+    implementation(project(":feature:settings"))
 
     // Core
     implementation(project(":core:data"))
