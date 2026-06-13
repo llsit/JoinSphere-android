@@ -12,7 +12,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.llsit.joinsphere.feature.createevent.CreateEventScreen
 import com.llsit.joinsphere.feature.discover.DiscoverScreen
-import com.llsit.joinsphere.feature.eventdetail.EventDetailScreen
+import com.llsit.joinsphere.feature.myevents.MyEventsScreen
 import com.llsit.joinsphere.feature.profile.ProfileScreen
 import com.llsit.navigation.AppNavigator
 import com.llsit.navigation.BottomTab
@@ -61,7 +61,7 @@ fun MainScaffold(navigator: AppNavigator) {
                 // ── [Tab 1] Discover Flow ─────────────────────────────────────
                 entry<DiscoverKey> {
                     DiscoverScreen(
-                        onEventClick = { },
+                        onEventClick = { id -> navigator.openEventDetail(id.toString()) },
                     )
                 }
 
@@ -77,7 +77,11 @@ fun MainScaffold(navigator: AppNavigator) {
 
                 // ── [Tab 4] Activities Flow ───────────────────────────────────
                 entry<MyActivitiesKey> {
-
+                    MyEventsScreen(
+                        onEventClick = { id -> navigator.openEventDetail(id) },
+                        onCreateEventClick = { navigator.openCreateEvent() },
+                        onChatClick = { id -> navigator.openChatRoom(id, "Event Chat") }
+                    )
                 }
 
                 // ── [Tab 5] Profile Flow ──────────────────────────────────────

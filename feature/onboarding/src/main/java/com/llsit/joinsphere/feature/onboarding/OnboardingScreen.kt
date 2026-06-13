@@ -26,7 +26,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ── Colors from design ──────────────────────────────────────────────────────
 private val BLUE = Color(0xFF2563EB)
 private val SURFACE = Color(0xFFFFFFFF)
 private val SLATE_900 = Color(0xFF0F172A)

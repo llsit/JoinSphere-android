@@ -30,7 +30,7 @@ fun RootNavDisplay(navigator: AppNavigator) {
             }
 
             entry<AuthKey> {
-                LoginScreen { }
+                LoginScreen(onLogin = { navigator.loginSuccess() })
             }
 
             // ── Main scaffold (tabs) ──────────────────────────────────────────
