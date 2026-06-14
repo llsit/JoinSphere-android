@@ -11,6 +11,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.llsit.joinsphere.core.design.MainBottomBar
 import com.llsit.joinsphere.core.design.PlaceholderScreen
+import com.llsit.joinsphere.feature.auth.AuthViewModel
 import com.llsit.joinsphere.feature.createevent.CreateEventScreen
 import com.llsit.joinsphere.feature.discover.DiscoverScreen
 import com.llsit.joinsphere.feature.eventdetail.EventDetailScreen
@@ -30,10 +31,14 @@ import com.llsit.navigation.NotificationsKey
 import com.llsit.navigation.ProfileKey
 import com.llsit.navigation.SearchKey
 import com.llsit.navigation.SettingsKey
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun MainScaffold(navigator: AppNavigator) {
-    val navEntries = remember(navigator) { mainNavEntries(navigator) }
+fun MainScaffold(
+    navigator: AppNavigator,
+    authViewModel: AuthViewModel = koinViewModel()
+) {
+    val navEntries = remember(navigator) { mainNavEntries(navigator, authViewModel) }
 
     Scaffold(
         bottomBar = {
@@ -51,7 +56,10 @@ fun MainScaffold(navigator: AppNavigator) {
     }
 }
 
-private fun mainNavEntries(navigator: AppNavigator): (NavKey) -> NavEntry<NavKey> {
+private fun mainNavEntries(
+    navigator: AppNavigator,
+    authViewModel: AuthViewModel
+): (NavKey) -> NavEntry<NavKey> {
     return entryProvider {
 
         // ── [Tab: Home] ───────────────────────────────────────────────────
@@ -86,7 +94,11 @@ private fun mainNavEntries(navigator: AppNavigator): (NavKey) -> NavEntry<NavKey
         // ── [Tab: Profile] ────────────────────────────────────────────────
         entry<ProfileKey> {
             ProfileScreen(
-                onLogout = { navigator.logout() },
+                onLogout = {
+                    authViewModel.logout {
+                        navigator.navigateToAuth()
+                    }
+                },
                 onSettingsClick = { navigator.openSettings() }
             )
         }

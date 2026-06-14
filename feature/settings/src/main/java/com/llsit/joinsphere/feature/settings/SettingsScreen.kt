@@ -1,6 +1,7 @@
 package com.llsit.joinsphere.feature.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,18 +22,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.llsit.joinsphere.core.design.Card
+import org.koin.androidx.compose.koinViewModel
 
 data class MenuItem(
     val icon: ImageVector,
     val label: String,
     val sub: String,
-    val hasToggle: Boolean = false
+    val hasToggle: Boolean = false,
+    val onClick: () -> Unit = {}
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    viewModel: SettingsViewModel = koinViewModel()
 ) {
     var notificationsEnabled by remember { mutableStateOf(true) }
 
@@ -86,6 +90,12 @@ fun SettingsScreen(
                         ),
                         MenuItem(Icons.Default.Favorite, "Interests", "Sports, Music, Food +3"),
                         MenuItem(Icons.Default.Lock, "Privacy", "Data and visibility settings"),
+                        MenuItem(
+                            Icons.Default.Refresh, 
+                            "Reset Onboarding", 
+                            "Show onboarding on next restart",
+                            onClick = { viewModel.resetOnboarding() }
+                        ),
                         MenuItem(Icons.Default.Help, "Help & Support", "FAQs and contact")
                     )
 
@@ -93,6 +103,7 @@ fun SettingsScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .clickable { item.onClick() }
                                 .padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)

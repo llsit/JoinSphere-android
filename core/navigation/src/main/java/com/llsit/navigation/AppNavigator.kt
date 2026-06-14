@@ -85,10 +85,10 @@ class AppNavigator(
 
     fun loginSuccess() {
         rootBackStack.clear()
-        rootBackStack.add(MainKey) // สลับเข้าสู่หน้าหลักของแอป
+        rootBackStack.add(MainKey)
     }
 
-    fun logout() {
+    fun navigateToAuth() {
         rootBackStack.clear()
         rootBackStack.add(AuthKey)
     }

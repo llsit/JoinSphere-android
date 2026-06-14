@@ -1,6 +1,7 @@
 plugins {
     id("joinsphere.android.library.compose")
     id("joinsphere.navigation")
+    id("joinsphere.koin")
 }
 
 android {
@@ -20,4 +21,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.material.icons.extended)
+    
+    implementation(libs.koin.androidx.compose)
 }

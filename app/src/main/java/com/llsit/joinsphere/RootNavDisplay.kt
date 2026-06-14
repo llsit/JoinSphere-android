@@ -20,9 +20,11 @@ fun RootNavDisplay(navigator: AppNavigator) {
 
             // ── Onboarding flow ───────────────────────────────────────────────
             entry<SplashKey> {
-                SplashScreen { startOnboarding ->
-                    navigator.proceedFromSplash(startOnboarding)
-                }
+                SplashScreen(
+                    onSplashFinished = { startOnboarding ->
+                        navigator.proceedFromSplash(startOnboarding)
+                    }
+                )
             }
 
             entry<OnboardingKey> {

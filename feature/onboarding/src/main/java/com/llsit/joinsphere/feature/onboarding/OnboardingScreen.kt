@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.llsit.joinsphere.core.design.Button
+import org.koin.androidx.compose.koinViewModel
 
 private val BLUE = Color(0xFF2563EB)
 private val SURFACE = Color(0xFFFFFFFF)
@@ -64,13 +65,19 @@ private val SCREENS = listOf(
 
 @Composable
 fun OnboardingScreen(
-    onComplete: () -> Unit
+    onComplete: () -> Unit,
+    viewModel: OnboardingViewModel = koinViewModel()
 ) {
     var currentStep by remember { mutableIntStateOf(0) }
     var isDone by remember { mutableStateOf(false) }
 
+    val handleComplete = {
+        viewModel.completeOnboarding()
+        onComplete()
+    }
+
     if (isDone) {
-        OnboardingCompleteScreen(onExplore = onComplete)
+        OnboardingCompleteScreen(onExplore = handleComplete)
     } else {
         OnboardingFlowContent(
             currentStep = currentStep,
@@ -81,7 +88,7 @@ fun OnboardingScreen(
                     isDone = true
                 }
             },
-            onSkip = { isDone = true }
+            onSkip = handleComplete
         )
     }
 }

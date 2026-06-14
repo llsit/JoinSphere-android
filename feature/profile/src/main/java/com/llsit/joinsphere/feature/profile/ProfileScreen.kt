@@ -83,7 +83,22 @@ fun ProfileScreen(
                                 colors = listOf(Color(0xFF1757F0), Color(0xFF3B82F6))
                             )
                         )
-                )
+                ) {
+                    IconButton(
+                        onClick = onSettingsClick,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .background(Color.Black.copy(alpha = 0.2f), androidx.compose.foundation.shape.CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
 
                 // Name + info section
                 Column(

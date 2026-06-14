@@ -29,9 +29,13 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.llsit.joinsphere.core.design.Button
 import com.llsit.joinsphere.core.design.ButtonVariant
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun LoginScreen(onLogin: () -> Unit = {}) {
+fun LoginScreen(
+    onLogin: () -> Unit = {},
+    viewModel: AuthViewModel = koinViewModel()
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPass by remember { mutableStateOf(false) }
@@ -209,7 +213,11 @@ fun LoginScreen(onLogin: () -> Unit = {}) {
 
             // Action Button
             Button(
-                onClick = onLogin,
+                onClick = {
+                    viewModel.login {
+                        onLogin()
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -251,14 +259,22 @@ fun LoginScreen(onLogin: () -> Unit = {}) {
                     icon = "G",
                     iconColor = Color(0xFF4285F4),
                     modifier = Modifier.weight(1f),
-                    onClick = onLogin
+                    onClick = {
+                        viewModel.login {
+                            onLogin()
+                        }
+                    }
                 )
                 SocialButton(
                     label = "Apple",
                     icon = "⌘",
                     iconColor = Color.Black,
                     modifier = Modifier.weight(1f),
-                    onClick = onLogin
+                    onClick = {
+                        viewModel.login {
+                            onLogin()
+                        }
+                    }
                 )
             }
 

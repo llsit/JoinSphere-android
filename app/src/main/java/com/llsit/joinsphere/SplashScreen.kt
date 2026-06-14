@@ -10,17 +10,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SplashScreen(
-    onSplashFinished: (startOnboarding: Boolean) -> Unit
+    onSplashFinished: (startOnboarding: Boolean) -> Unit,
+    viewModel: SplashViewModel = koinViewModel()
 ) {
     LaunchedEffect(Unit) {
-        delay(1500)
-        // For now, always go to onboarding. 
-        // In a real app, check if user has seen it before.
-        onSplashFinished(true)
+        viewModel.checkOnboarding { startOnboarding ->
+            onSplashFinished(startOnboarding)
+        }
     }
 
     Box(
