@@ -10,6 +10,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             plugins.apply("com.android.library")
+            plugins.apply("joinsphere.android.flavor")
 
             extensions.configure<LibraryExtension> {
                 compileSdk = 36

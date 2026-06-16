@@ -3,8 +3,8 @@ plugins {
     id("joinsphere.koin")
     id("joinsphere.navigation")
     alias(libs.plugins.ksp)
-    // alias(libs.plugins.google.services)
-    // alias(libs.plugins.crashlytics)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.crashlytics)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -17,14 +17,24 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        
-        buildConfigField("String", "BASE_URL", "\"https://api.example.com/\"")
+    }
+
+    productFlavors {
+        getByName("staging") {
+            buildConfigField("String", "BASE_URL", "\"https://api.staging.example.com/\"")
+        }
+        getByName("prod") {
+            buildConfigField("String", "BASE_URL", "\"https://api.example.com/\"")
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     buildFeatures {
@@ -50,7 +60,7 @@ dependencies {
     implementation(project(":core:design"))
     implementation(project(":core:domain"))
     implementation(project(":core:model"))
-    
+
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

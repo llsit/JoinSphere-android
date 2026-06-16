@@ -10,6 +10,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             plugins.apply("com.android.application")
+            plugins.apply("joinsphere.android.flavor")
 
             extensions.configure<ApplicationExtension> {
                 compileSdk = 36

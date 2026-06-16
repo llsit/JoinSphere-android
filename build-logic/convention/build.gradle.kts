@@ -36,5 +36,9 @@ gradlePlugin {
             id = "joinsphere.navigation"
             implementationClass = "com.llsit.joinsphere.NavigationConventionPlugin"
         }
+        register("androidFlavor") {
+            id = "joinsphere.android.flavor"
+            implementationClass = "com.llsit.joinsphere.AndroidFlavorConventionPlugin"
+        }
     }
 }
