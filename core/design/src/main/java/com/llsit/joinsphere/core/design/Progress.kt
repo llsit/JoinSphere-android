@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun Progress(
-    value: Float, // 0.0f to 1.0f
+    value: Float,
     modifier: Modifier = Modifier
 ) {
     Box(

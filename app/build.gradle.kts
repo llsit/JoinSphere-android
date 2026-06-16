@@ -1,10 +1,9 @@
 plugins {
     id("joinsphere.android.application.compose")
+    id("joinsphere.firebase")
     id("joinsphere.koin")
     id("joinsphere.navigation")
     alias(libs.plugins.ksp)
-    alias(libs.plugins.google.services)
-    alias(libs.plugins.crashlytics)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -69,13 +68,10 @@ dependencies {
 
 
     // Firebase
-    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.storage)
-    implementation(libs.firebase.analytics)
-    implementation(libs.firebase.crashlytics)
 
     // Ktor
     implementation(libs.ktor.client.core)

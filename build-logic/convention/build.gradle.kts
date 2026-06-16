@@ -40,5 +40,9 @@ gradlePlugin {
             id = "joinsphere.android.flavor"
             implementationClass = "com.llsit.joinsphere.AndroidFlavorConventionPlugin"
         }
+        register("firebase") {
+            id = "joinsphere.firebase"
+            implementationClass = "com.llsit.joinsphere.FirebaseConventionPlugin"
+        }
     }
 }

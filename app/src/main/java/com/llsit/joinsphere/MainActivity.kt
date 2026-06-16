@@ -1,6 +1,8 @@
 package com.llsit.joinsphere
 
 import android.os.Bundle
+import android.view.ViewGroup
+import android.widget.Button
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -26,5 +28,19 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        val crashButton = Button(this)
+        crashButton.text = "Test Crash"
+        crashButton.setOnClickListener {
+            throw RuntimeException("Test Crash") // Force a crash
+        }
+
+        addContentView(
+            crashButton, ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
     }
 }
+
