@@ -1,5 +1,6 @@
 package com.llsit.joinsphere.feature.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -65,6 +68,21 @@ fun LoginScreen(
     var name by remember { mutableStateOf("") }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is AuthUiEffect.NavigateToHome -> {
+                    onLogin()
+                }
+
+                is AuthUiEffect.ShowToast -> {
+                    Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     LaunchedEffect(uiState.isAuthenticated) {
         if (uiState.isAuthenticated) {
@@ -81,6 +99,7 @@ fun LoginScreen(
             .fillMaxSize()
             .background(Color.White)
             .verticalScroll(rememberScrollState())
+            .imePadding()
     ) {
         // Hero Section
         Box(
@@ -249,9 +268,9 @@ fun LoginScreen(
             Button(
                 onClick = {
                     if (mode == "login") {
-                        viewModel.processIntent(AuthIntent.Login)
+                        viewModel.processIntent(AuthIntent.Login(email, password))
                     } else {
-                        viewModel.processIntent(AuthIntent.Register)
+                        viewModel.processIntent(AuthIntent.Register(email, password))
                     }
                 },
                 modifier = Modifier
@@ -296,7 +315,7 @@ fun LoginScreen(
                     iconColor = Color(0xFF4285F4),
                     modifier = Modifier.weight(1f),
                     onClick = {
-                        viewModel.processIntent(AuthIntent.Login)
+//                        viewModel.processIntent(AuthIntent.Login(email, password))
                     }
                 )
                 SocialButton(
@@ -305,7 +324,7 @@ fun LoginScreen(
                     iconColor = Color.Black,
                     modifier = Modifier.weight(1f),
                     onClick = {
-                        viewModel.processIntent(AuthIntent.Login)
+//                        viewModel.processIntent(AuthIntent.Login(email, password))
                     }
                 )
             }

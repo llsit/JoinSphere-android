@@ -2,58 +2,64 @@ package com.llsit.joinsphere.feature.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.llsit.joinsphere.core.domain.repository.AuthRepository
 import com.llsit.joinsphere.core.domain.repository.UserDataRepository
+import com.llsit.joinsphere.core.domain.usecase.LoginUseCase
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-data class AuthUiState(
-    val isLoading: Boolean = false,
-    val isAuthenticated: Boolean = false,
-    val errorMessage: String? = null
-)
 
-
-sealed interface AuthIntent {
-    object Login : AuthIntent
-    object Register : AuthIntent
-    object Logout : AuthIntent
-    object ClearError : AuthIntent
-}
 class AuthViewModel(
-    private val userDataRepository: UserDataRepository
+    private val userDataRepository: UserDataRepository,
+    private val authRepository: AuthRepository,
+    private val loginUseCase: LoginUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
+    private val _effect = MutableSharedFlow<AuthUiEffect>()
+    val effect: SharedFlow<AuthUiEffect> = _effect.asSharedFlow()
+
     fun processIntent(intent: AuthIntent) {
         when (intent) {
-            is AuthIntent.Login -> login()
+            is AuthIntent.Login -> login(intent.email, intent.password)
             is AuthIntent.Logout -> logout()
-            AuthIntent.Register -> register()
+            is AuthIntent.Register -> register(intent.email, intent.password)
             is AuthIntent.ClearError -> _uiState.update { it.copy(errorMessage = null) }
 
         }
     }
 
-    private fun register() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-
-
-        }
-    }
-    
-    private fun login() {
+    private fun register(email: String, password: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             try {
-                userDataRepository.setAuthToken("mock_token")
-                _uiState.update { it.copy(isLoading = false, isAuthenticated = true) }
+                authRepository.register(email, password)
+                login(email, password)
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = e.localizedMessage ?: "Login Failed") }
+                _uiState.update { it.copy(isLoading = false) }
+                val errorMsg = e.localizedMessage ?: "Register Failed"
+                _effect.emit(AuthUiEffect.ShowToast(errorMsg))
+            }
+        }
+    }
+
+    private fun login(email: String, password: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            loginUseCase(email, password).onSuccess {
+                _uiState.update { it.copy(isLoading = false, isAuthenticated = true) }
+            }.onFailure { e ->
+                _uiState.update { it.copy(isLoading = false) }
+                val errorMsg = e.localizedMessage ?: "Login Faile"
+                _effect.emit(AuthUiEffect.ShowToast(errorMsg))
             }
         }
     }

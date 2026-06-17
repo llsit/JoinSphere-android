@@ -1,6 +1,7 @@
 plugins {
     id("joinsphere.android.library")
     id("joinsphere.koin")
+    id("joinsphere.firebase")
 }
 
 android {
