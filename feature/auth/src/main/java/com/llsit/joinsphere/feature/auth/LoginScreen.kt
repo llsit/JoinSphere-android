@@ -270,7 +270,7 @@ fun LoginScreen(
                     if (mode == "login") {
                         viewModel.processIntent(AuthIntent.Login(email, password))
                     } else {
-                        viewModel.processIntent(AuthIntent.Register(email, password))
+                        viewModel.processIntent(AuthIntent.Register(email, email, password))
                     }
                 },
                 modifier = Modifier
