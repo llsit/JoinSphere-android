@@ -67,13 +67,11 @@ data class MenuItem(
 fun SettingsScreen(
     onBackClick: () -> Unit = {},
     onLogout: () -> Unit = {},
-    onEditProfileClick: () -> Unit = {},
     viewModel: SettingsViewModel = koinViewModel()
 ) {
     SettingsScreenContent(
         onBackClick = onBackClick,
         onLogout = onLogout,
-        onEditProfileClick = onEditProfileClick,
         onResetOnboarding = { viewModel.resetOnboarding() }
     )
 }
@@ -83,7 +81,6 @@ fun SettingsScreen(
 private fun SettingsScreenContent(
     onBackClick: () -> Unit = {},
     onLogout: () -> Unit = {},
-    onEditProfileClick: () -> Unit = {},
     onResetOnboarding: () -> Unit = {}
 ) {
     var notificationsEnabled by remember { mutableStateOf(true) }
@@ -120,24 +117,6 @@ private fun SettingsScreenContent(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 10.dp)
         ) {
-            // Account / Edit row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "Account", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text(
-                    text = "Edit profile",
-                    color = Color(0xFF1757F0),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { onEditProfileClick() }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
             Card(
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {

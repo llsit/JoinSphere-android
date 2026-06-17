@@ -1,10 +1,11 @@
-package com.llsit.joinsphere
+package com.llsit.joinsphere.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.llsit.joinsphere.feature.auth.LoginScreen
 import com.llsit.joinsphere.feature.onboarding.OnboardingScreen
+import com.llsit.joinsphere.splash.SplashScreen
 import com.llsit.navigation.AppNavigator
 import com.llsit.navigation.AuthKey
 import com.llsit.navigation.MainKey
@@ -21,9 +22,9 @@ fun RootNavDisplay(navigator: AppNavigator) {
             // ── Onboarding flow ───────────────────────────────────────────────
             entry<SplashKey> {
                 SplashScreen(
-                    onSplashFinished = { startOnboarding ->
-                        navigator.proceedFromSplash(startOnboarding)
-                    }
+                    onNavigateToOnboarding = { navigator.proceedFromSplash(true) },
+                    onNavigateToLogin = { navigator.proceedFromSplash(false) },
+                    onNavigateToHome = { navigator.loginSuccess() },
                 )
             }
 

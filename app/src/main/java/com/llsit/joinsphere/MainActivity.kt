@@ -1,13 +1,12 @@
 package com.llsit.joinsphere
 
 import android.os.Bundle
-import android.view.ViewGroup
-import android.widget.Button
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
+import com.llsit.joinsphere.navigation.RootNavDisplay
 import com.llsit.joinsphere.ui.theme.JoinSphereTheme
 import com.llsit.navigation.LocalNavigator
 import com.llsit.navigation.rememberAppNavigator
