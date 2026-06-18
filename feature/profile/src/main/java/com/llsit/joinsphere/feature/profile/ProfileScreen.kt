@@ -1,5 +1,8 @@
 package com.llsit.joinsphere.feature.profile
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,6 +34,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,10 +51,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.llsit.joinsphere.core.design.Card
-import com.llsit.joinsphere.feature.profile.state.ProfileUiState
+import com.llsit.joinsphere.core.model.UserProfileDto
+import com.llsit.joinsphere.feature.profile.state.ProfileIntent
+import com.llsit.joinsphere.feature.profile.state.ProfileUiEffect
+import org.koin.androidx.compose.koinViewModel
 import java.time.Instant
 import java.time.ZoneId
-import org.koin.androidx.compose.koinViewModel
 
 data class Stat(val label: String, val value: String)
 data class Badge(val emoji: String, val label: String, val bg: Color, val color: Color)
@@ -61,14 +68,6 @@ val BADGES = listOf(
     Badge("🤝", "Connector", Color(0xFFECFDF5), Color(0xFF059669))
 )
 
-val RECENT = listOf(
-    "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=120&h=120&fit=crop&auto=format",
-    "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=120&h=120&fit=crop&auto=format",
-    "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=120&h=120&fit=crop&auto=format",
-    "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=120&h=120&fit=crop&auto=format",
-    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=120&h=120&fit=crop&auto=format"
-)
-
 @Composable
 fun ProfileScreen(
     onLogout: () -> Unit = {},
@@ -77,41 +76,63 @@ fun ProfileScreen(
     profileViewModel: ProfileViewModel = koinViewModel()
 ) {
     val uiState by profileViewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-    when (val state = uiState) {
-        is ProfileUiState.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            profileViewModel.processIntent(ProfileIntent.EditImageProfile(uri))
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        profileViewModel.effect.collect { effect ->
+            when (effect) {
+                is ProfileUiEffect.OpenGallery -> {
+                    imagePickerLauncher.launch("image/*")
+                }
+                is ProfileUiEffect.ShowToast -> {
+                    Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
+                }
             }
         }
+    }
 
-        is ProfileUiState.Error -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = state.message, color = Color.Red)
-            }
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
         }
+    }
 
-        is ProfileUiState.Success -> {
-            ProfileContent(
-                profile = state.profile,
-                onEditProfileClick = onEditProfileClick,
-                onSettingsClick = onSettingsClick
-            )
+    if (!uiState.errorMessage.isNullOrEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = uiState.errorMessage.toString(), color = Color.Red)
         }
+    }
+
+    uiState.profile?.let { profile ->
+        ProfileContent(
+            profile = profile,
+            onEditProfileClick = onEditProfileClick,
+            onSettingsClick = onSettingsClick,
+            onAvatarClick = { profileViewModel.dispatchGalleryEffect() }
+        )
     }
 }
 
 @Composable
 fun ProfileContent(
-    profile: com.llsit.joinsphere.core.model.UserProfileDto,
+    profile: UserProfileDto,
     onEditProfileClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
+    onAvatarClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -244,7 +265,7 @@ fun ProfileContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
-                Box {
+                Box(modifier = Modifier.clickable { onAvatarClick() }) {
                     AsyncImage(
                         model = profile.avatarUrl,
                         contentDescription = "Profile",
@@ -411,6 +432,12 @@ fun ProfileContent(
             }
             Spacer(modifier = Modifier.height(12.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                val RECENT = listOf(
+                    "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=120&h=120&fit=crop&auto=format",
+                    "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=120&h=120&fit=crop&auto=format",
+                    "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=120&h=120&fit=crop&auto=format",
+                    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=120&h=120&fit=crop&auto=format"
+                )
                 items(RECENT) { src ->
                     AsyncImage(
                         model = src,
@@ -497,7 +524,7 @@ fun ProfileContent(
 @Composable
 fun ProfileScreenPreview() {
     ProfileContent(
-        profile = com.llsit.joinsphere.core.model.UserProfileDto(
+        profile = UserProfileDto(
             name = "Alex Johnson",
             email = "alex@example.com",
             location = "San Francisco, CA",
