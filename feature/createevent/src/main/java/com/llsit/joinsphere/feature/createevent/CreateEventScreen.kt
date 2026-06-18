@@ -1,5 +1,9 @@
 package com.llsit.joinsphere.feature.createevent
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -38,6 +42,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +53,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -55,7 +61,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.llsit.joinsphere.feature.createevent.state.CreateEventIntent
+import com.llsit.joinsphere.feature.createevent.state.CreateEventUiEffect
+import org.koin.androidx.compose.koinViewModel
 
 data class Category(val id: String, val label: String, val emoji: String)
 
@@ -71,41 +81,37 @@ val CATEGORIES = listOf(
 )
 
 @Composable
-fun CreateEventScreen() {
-    var step by remember { mutableStateOf(1) }
-    var submitted by remember { mutableStateOf(false) }
+fun CreateEventScreen(
+    viewModel: CreateEventViewModel = koinViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var title by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var date by remember { mutableStateOf("") }
-    var time by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
-    var maxAttendees by remember { mutableStateOf("") }
-    var isFree by remember { mutableStateOf(true) }
-    var price by remember { mutableStateOf("") }
-    var soloFriendly by remember { mutableStateOf(true) }
-    var imageSet by remember { mutableStateOf(false) }
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.processIntent(CreateEventIntent.ImageSelected(uri))
+        }
+    }
 
-    val step1Complete = title.trim().length > 3 && category.isNotEmpty()
-    val step2Complete = date.isNotEmpty() && time.isNotEmpty() && location.trim().isNotEmpty()
+    val context = LocalContext.current
 
-    if (submitted) {
-        SuccessScreen(onReset = {
-            submitted = false
-            step = 1
-            title = ""
-            category = ""
-            description = ""
-            date = ""
-            time = ""
-            location = ""
-            maxAttendees = ""
-            isFree = true
-            price = ""
-            soloFriendly = true
-            imageSet = false
-        }, location = location)
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is CreateEventUiEffect.OpenGallery -> imagePickerLauncher.launch("image/*")
+                is CreateEventUiEffect.ShowToast -> {
+                    Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    if (uiState.isSubmitted) {
+        SuccessScreen(
+            onReset = { viewModel.processIntent(CreateEventIntent.ResetForm) },
+            location = uiState.location
+        )
     } else {
         Column(
             modifier = Modifier
@@ -114,12 +120,12 @@ fun CreateEventScreen() {
         ) {
             // Header
             HeaderSection(
-                step = step,
-                onBack = { if (step > 1) step -= 1 }
+                step = uiState.currentStep,
+                onBack = { viewModel.processIntent(CreateEventIntent.PreviousStep) }
             )
 
             // Progress Bar
-            ProgressBar(step = step)
+            ProgressBar(step = uiState.currentStep)
 
             // Step Content
             Box(modifier = Modifier.weight(1f)) {
@@ -129,46 +135,95 @@ fun CreateEventScreen() {
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 20.dp)
                 ) {
-                    when (step) {
+                    when (uiState.currentStep) {
                         1 -> Step1(
-                            title = title,
-                            onTitleChange = { title = it },
-                            category = category,
-                            onCategoryChange = { category = it },
-                            description = description,
-                            onDescriptionChange = { description = it },
-                            soloFriendly = soloFriendly,
-                            onSoloFriendlyChange = { soloFriendly = it },
-                            imageSet = imageSet,
-                            onImageSetChange = { imageSet = it }
+                            title = uiState.title,
+                            onTitleChange = {
+                                viewModel.processIntent(
+                                    CreateEventIntent.UpdateTitle(
+                                        it
+                                    )
+                                )
+                            },
+                            category = uiState.categoryId,
+                            onCategoryChange = {
+                                viewModel.processIntent(
+                                    CreateEventIntent.UpdateCategory(
+                                        it
+                                    )
+                                )
+                            },
+                            description = uiState.description,
+                            onDescriptionChange = {
+                                viewModel.processIntent(
+                                    CreateEventIntent.UpdateDescription(
+                                        it
+                                    )
+                                )
+                            },
+                            soloFriendly = uiState.isSoloFriendly,
+                            onSoloFriendlyChange = {
+                                viewModel.processIntent(
+                                    CreateEventIntent.UpdateSoloFriendly(
+                                        it
+                                    )
+                                )
+                            },
+                            imageUri = uiState.localImageUri,
+                            onImageClick = { viewModel.dispatchGalleryEffect() }
                         )
 
                         2 -> Step2(
-                            date = date,
-                            onDateChange = { date = it },
-                            time = time,
-                            onTimeChange = { time = it },
-                            location = location,
-                            onLocationChange = { location = it },
-                            maxAttendees = maxAttendees,
-                            onMaxAttendeesChange = { maxAttendees = it },
-                            isFree = isFree,
-                            onIsFreeChange = { isFree = it },
-                            price = price,
-                            onPriceChange = { price = it }
+                            date = uiState.date,
+                            onDateChange = { viewModel.processIntent(CreateEventIntent.UpdateDate(it)) },
+                            time = uiState.time,
+                            onTimeChange = { viewModel.processIntent(CreateEventIntent.UpdateTime(it)) },
+                            location = uiState.location,
+                            onLocationChange = {
+                                viewModel.processIntent(
+                                    CreateEventIntent.UpdateLocation(
+                                        it
+                                    )
+                                )
+                            },
+                            maxAttendees = uiState.maxAttendees,
+                            onMaxAttendeesChange = {
+                                viewModel.processIntent(
+                                    CreateEventIntent.UpdateMaxAttendees(
+                                        it
+                                    )
+                                )
+                            },
+                            isFree = uiState.isFree,
+                            onIsFreeChange = {
+                                viewModel.processIntent(
+                                    CreateEventIntent.UpdateIsFree(
+                                        it
+                                    )
+                                )
+                            },
+                            price = uiState.price,
+                            onPriceChange = {
+                                viewModel.processIntent(
+                                    CreateEventIntent.UpdatePrice(
+                                        it
+                                    )
+                                )
+                            }
                         )
 
                         3 -> Step3(
-                            title = title,
-                            category = category,
-                            description = description,
-                            date = date,
-                            time = time,
-                            location = location,
-                            maxAttendees = maxAttendees,
-                            isFree = isFree,
-                            price = price,
-                            soloFriendly = soloFriendly
+                            title = uiState.title,
+                            category = uiState.categoryId,
+                            description = uiState.description,
+                            date = uiState.date,
+                            time = uiState.time,
+                            location = uiState.location,
+                            maxAttendees = uiState.maxAttendees,
+                            isFree = uiState.isFree,
+                            price = uiState.price,
+                            soloFriendly = uiState.isSoloFriendly,
+                            uiState.localImageUri
                         )
                     }
                     Spacer(modifier = Modifier.height(120.dp))
@@ -184,8 +239,14 @@ fun CreateEventScreen() {
                     .padding(horizontal = 20.dp, vertical = 20.dp)
             ) {
                 Button(
-                    onClick = { if (step < 3) step += 1 else submitted = true },
-                    enabled = (step == 1 && step1Complete) || (step == 2 && step2Complete) || step == 3,
+                    onClick = {
+                        if (uiState.currentStep < 3) {
+                            viewModel.processIntent(CreateEventIntent.NextStep)
+                        } else {
+                            viewModel.processIntent(CreateEventIntent.PublishEvent)
+                        }
+                    },
+                    enabled = uiState.isNextButtonEnabled && !uiState.isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -193,7 +254,7 @@ fun CreateEventScreen() {
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1757F0))
                 ) {
                     Text(
-                        text = if (step < 3) "Continue" else "Publish event",
+                        text = if (uiState.currentStep < 3) "Continue" else "Publish event",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -324,22 +385,22 @@ fun Step1(
     category: String, onCategoryChange: (String) -> Unit,
     description: String, onDescriptionChange: (String) -> Unit,
     soloFriendly: Boolean, onSoloFriendlyChange: (Boolean) -> Unit,
-    imageSet: Boolean, onImageSetChange: (Boolean) -> Unit
+    imageUri: Uri?, onImageClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
         // Photo upload
         Surface(
-            onClick = { onImageSetChange(!imageSet) },
+            onClick = { onImageClick() },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(140.dp),
             shape = RoundedCornerShape(24.dp),
             color = Color(0xFFF4F5F8)
         ) {
-            if (imageSet) {
+            if (imageUri != null) {
                 Box {
                     AsyncImage(
-                        model = "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600&h=280&fit=crop&auto=format",
+                        model = imageUri ?: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600&h=280&fit=crop&auto=format",
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -634,7 +695,8 @@ fun Step3(
     maxAttendees: String,
     isFree: Boolean,
     price: String,
-    soloFriendly: Boolean
+    soloFriendly: Boolean,
+    imageUri: Uri?
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         // Preview Card
@@ -646,7 +708,8 @@ fun Step3(
         ) {
             Column {
                 AsyncImage(
-                    model = "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600&h=260&fit=crop&auto=format",
+                    model = imageUri
+                        ?: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600&h=260&fit=crop&auto=format",
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()

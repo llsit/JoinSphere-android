@@ -5,6 +5,7 @@ import com.llsit.joinsphere.core.data.di.dataModule
 import com.llsit.joinsphere.core.domain.di.domainModule
 import com.llsit.joinsphere.di.appModule
 import com.llsit.joinsphere.feature.auth.di.authModule
+import com.llsit.joinsphere.feature.createevent.di.createEventModule
 import com.llsit.joinsphere.feature.onboarding.di.onboardingModule
 import com.llsit.joinsphere.feature.profile.di.profileModule
 import com.llsit.joinsphere.feature.settings.di.settingsModule
@@ -30,7 +31,8 @@ class JoinSphereApplication : Application() {
                 authModule,
                 onboardingModule,
                 settingsModule,
-                profileModule
+                profileModule,
+                createEventModule
             )
         }
     }
