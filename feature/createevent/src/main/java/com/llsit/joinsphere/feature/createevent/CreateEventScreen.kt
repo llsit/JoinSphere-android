@@ -1,5 +1,7 @@
 package com.llsit.joinsphere.feature.createevent
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -7,7 +9,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -95,16 +102,25 @@ fun CreateEventScreen(
     }
 
     val context = LocalContext.current
+    var showMap by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is CreateEventUiEffect.OpenGallery -> imagePickerLauncher.launch("image/*")
+                is CreateEventUiEffect.OpenMap -> showMap = true
                 is CreateEventUiEffect.ShowToast -> {
                     Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
+    }
+
+    if (showMap) {
+//        LocationPickerDialog(
+//            onDismiss = { showMap = false },
+//            onLocationSelected = { viewModel.processIntent(CreateEventIntent.UpdateLocation(it)) }
+//        )
     }
 
     if (uiState.isSubmitted) {
@@ -186,6 +202,7 @@ fun CreateEventScreen(
                                     )
                                 )
                             },
+                            onLocationClick = { viewModel.dispatchMapEffect() },
                             maxAttendees = uiState.maxAttendees,
                             onMaxAttendeesChange = {
                                 viewModel.processIntent(
@@ -601,35 +618,72 @@ fun Step2(
     date: String, onDateChange: (String) -> Unit,
     time: String, onTimeChange: (String) -> Unit,
     location: String, onLocationChange: (String) -> Unit,
+    onLocationClick: () -> Unit,
     maxAttendees: String, onMaxAttendeesChange: (String) -> Unit,
     isFree: Boolean, onIsFreeChange: (Boolean) -> Unit,
     price: String, onPriceChange: (String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        val context = LocalContext.current
+        val calendar = Calendar.getInstance()
+
+        val datePickerDialog = DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
+                onDateChange(selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE))
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).apply {
+            datePicker.minDate = System.currentTimeMillis() - 1000
+        }
+
+        val timePickerDialog = TimePickerDialog(
+            context,
+            { _, hourOfDay, minute ->
+                val selectedTime = LocalTime.of(hourOfDay, minute)
+                onTimeChange(selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")))
+            },
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
+            true
+        )
+
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             FormField(label = "Date", modifier = Modifier.weight(1f)) {
-                CustomCreateTextField(
-                    value = date,
-                    onValueChange = onDateChange,
-                    placeholder = "YYYY-MM-DD"
-                )
+                Box(modifier = Modifier.clickable { datePickerDialog.show() }) {
+                    CustomCreateTextField(
+                        value = date,
+                        onValueChange = {},
+                        placeholder = "YYYY-MM-DD",
+                        enabled = false
+                    )
+                }
             }
             FormField(label = "Start time", modifier = Modifier.weight(1f)) {
-                CustomCreateTextField(
-                    value = time,
-                    onValueChange = onTimeChange,
-                    placeholder = "HH:MM"
-                )
+                Box(modifier = Modifier.clickable { timePickerDialog.show() }) {
+                    CustomCreateTextField(
+                        value = time,
+                        onValueChange = {},
+                        placeholder = "HH:MM",
+                        enabled = false
+                    )
+                }
             }
         }
 
         FormField(label = "Location") {
-            CustomCreateTextField(
-                value = location,
-                onValueChange = onLocationChange,
-                placeholder = "Address or venue name",
-                leadingIcon = Icons.Default.Place
-            )
+            Box(modifier = Modifier.clickable { onLocationClick() }) {
+                CustomCreateTextField(
+                    value = location,
+                    onValueChange = onLocationChange,
+                    placeholder = "Address or venue name",
+                    leadingIcon = Icons.Default.Place,
+                    enabled = false
+                )
+            }
         }
 
         FormField(label = "Capacity (optional)") {
@@ -849,12 +903,14 @@ fun CustomCreateTextField(
     onValueChange: (String) -> Unit,
     placeholder: String,
     leadingIcon: ImageVector? = null,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    enabled: Boolean = true
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = Modifier.fillMaxWidth(),
+        enabled = enabled,
         placeholder = { Text(placeholder, color = Color(0xFF9CA3AF), fontSize = 15.sp) },
         leadingIcon = leadingIcon?.let {
             {

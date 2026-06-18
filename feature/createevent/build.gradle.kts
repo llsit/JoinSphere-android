@@ -21,4 +21,6 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.material.icons.extended)
     implementation(libs.coil.compose)
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.location)
 }

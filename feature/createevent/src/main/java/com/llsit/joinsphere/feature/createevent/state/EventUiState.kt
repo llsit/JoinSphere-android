@@ -1,5 +1,9 @@
 package com.llsit.joinsphere.feature.createevent.state
 
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+
 data class CreateEventUiState(
     val currentStep: Int = 1,
     val isLoading: Boolean = false,
@@ -9,9 +13,9 @@ data class CreateEventUiState(
     val title: String = "",
     val categoryId: String = "",
     val description: String = "",
-    val date: String = "",
-    val time: String = "",
-    val location: String = "",
+    val date: String = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
+    val time: String = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
+    val location: String = "mock location",
     val maxAttendees: String = "",
     val isFree: Boolean = true,
     val price: String = "",
@@ -53,5 +57,6 @@ sealed interface CreateEventIntent {
 
 sealed interface CreateEventUiEffect {
     object OpenGallery : CreateEventUiEffect
+    object OpenMap : CreateEventUiEffect
     data class ShowToast(val message: String) : CreateEventUiEffect
 }

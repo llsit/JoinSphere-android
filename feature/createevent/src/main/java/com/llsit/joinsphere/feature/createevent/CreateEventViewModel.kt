@@ -72,7 +72,7 @@ class CreateEventViewModel(
                     description = currentState.description,
                     date = currentState.date,
                     time = currentState.time,
-                    location = currentState.location,
+                    location = currentState.location ,
                     maxAttendees = currentState.maxAttendees.toIntOrNull(),
                     isFree = currentState.isFree,
                     price = currentState.price.toDoubleOrNull() ?: 0.0,
@@ -95,5 +95,9 @@ class CreateEventViewModel(
 
     fun dispatchGalleryEffect() {
         viewModelScope.launch { _effect.emit(CreateEventUiEffect.OpenGallery) }
+    }
+
+    fun dispatchMapEffect() {
+        viewModelScope.launch { _effect.emit(CreateEventUiEffect.OpenMap) }
     }
 }
