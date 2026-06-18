@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -45,16 +46,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.llsit.joinsphere.core.design.Card
+import com.llsit.joinsphere.feature.profile.state.ProfileUiState
+import java.time.Instant
+import java.time.ZoneId
 import org.koin.androidx.compose.koinViewModel
 
 data class Stat(val label: String, val value: String)
 data class Badge(val emoji: String, val label: String, val bg: Color, val color: Color)
-
-val STATS = listOf(
-    Stat("Attended", "47"),
-    Stat("Hosted", "8"),
-    Stat("Reviews", "4.9★")
-)
 
 val BADGES = listOf(
     Badge("🏃", "Active Runner", Color(0xFFEFF6FF), Color(0xFF1D4ED8)),
@@ -79,6 +77,42 @@ fun ProfileScreen(
     profileViewModel: ProfileViewModel = koinViewModel()
 ) {
     val uiState by profileViewModel.uiState.collectAsStateWithLifecycle()
+
+    when (val state = uiState) {
+        is ProfileUiState.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        is ProfileUiState.Error -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = state.message, color = Color.Red)
+            }
+        }
+
+        is ProfileUiState.Success -> {
+            ProfileContent(
+                profile = state.profile,
+                onEditProfileClick = onEditProfileClick,
+                onSettingsClick = onSettingsClick
+            )
+        }
+    }
+}
+
+@Composable
+fun ProfileContent(
+    profile: com.llsit.joinsphere.core.model.UserProfileDto,
+    onEditProfileClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -137,17 +171,19 @@ fun ProfileScreen(
                         modifier = Modifier.padding(bottom = 4.dp)
                     ) {
                         Text(
-                            text = "Alex Johnson",
+                            text = profile.name,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = (-0.4).sp
                         )
-                        Icon(
-                            imageVector = Icons.Default.Shield,
-                            contentDescription = "Verified",
-                            tint = Color(0xFF1757F0),
-                            modifier = Modifier.size(16.dp)
-                        )
+                        if (profile.isVerified) {
+                            Icon(
+                                imageVector = Icons.Default.Shield,
+                                contentDescription = "Verified",
+                                tint = Color(0xFF1757F0),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                         Spacer(modifier = Modifier.weight(1f))
                         Text(
                             text = "Edit profile",
@@ -174,21 +210,24 @@ fun ProfileScreen(
                                 modifier = Modifier.size(12.dp)
                             )
                             Text(
-                                text = "Mission District, SF",
+                                text = profile.location.ifEmpty { "Location not set" },
                                 color = Color(0xFF737880),
                                 fontSize = 13.sp
                             )
                         }
                         Text(text = "·", color = Color(0xFF737880))
+                        val memberSince = Instant.ofEpochMilli(profile.createdAt)
+                            .atZone(ZoneId.systemDefault())
+                            .year
                         Text(
-                            text = "Member since 2023",
+                            text = "Member since $memberSince",
                             color = Color(0xFF737880),
                             fontSize = 13.sp
                         )
                     }
 
                     Text(
-                        text = "Outdoor enthusiast, amateur chef, always looking for the next great experience. Here to explore the city and meet interesting people.",
+                        text = profile.bio.ifEmpty { "No bio available." },
                         color = Color(0xFF737880),
                         fontSize = 13.sp,
                         lineHeight = 19.sp
@@ -207,7 +246,7 @@ fun ProfileScreen(
             ) {
                 Box {
                     AsyncImage(
-                        model = "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=160&h=160&fit=crop&auto=format",
+                        model = profile.avatarUrl,
                         contentDescription = "Profile",
                         modifier = Modifier
                             .size(72.dp)
@@ -234,27 +273,29 @@ fun ProfileScreen(
                     }
                 }
 
-                Surface(
-                    color = Color(0xFFE5EDFF),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                if (profile.isVerified) {
+                    Surface(
+                        color = Color(0xFFE5EDFF),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Shield,
-                            contentDescription = null,
-                            tint = Color(0xFF1757F0),
-                            modifier = Modifier.size(13.dp)
-                        )
-                        Text(
-                            text = "ID Verified",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1757F0)
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Shield,
+                                contentDescription = null,
+                                tint = Color(0xFF1757F0),
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Text(
+                                text = "ID Verified",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1757F0)
+                            )
+                        }
                     }
                 }
             }
@@ -266,8 +307,13 @@ fun ProfileScreen(
                 .padding(horizontal = 20.dp)
                 .offset(y = (-10).dp)
         ) {
+            val currentStats = listOf(
+                Stat("Events", (profile.stats["attendedCount"] ?: 0).toString()),
+                Stat("Hosted", (profile.stats["hostedCount"] ?: 0).toString()),
+                Stat("Rating", (profile.stats["rating"] ?: 5.0).toString())
+            )
             Row(modifier = Modifier.fillMaxWidth()) {
-                STATS.forEachIndexed { index, stat ->
+                currentStats.forEachIndexed { index, stat ->
                     Column(
                         modifier = Modifier
                             .weight(1f)
@@ -289,7 +335,7 @@ fun ProfileScreen(
                             modifier = Modifier.padding(top = 2.dp)
                         )
                     }
-                    if (index < STATS.size - 1) {
+                    if (index < currentStats.size - 1) {
                         Box(
                             modifier = Modifier
                                 .width(1.dp)
@@ -450,5 +496,13 @@ fun ProfileScreen(
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
-    ProfileScreen()
+    ProfileContent(
+        profile = com.llsit.joinsphere.core.model.UserProfileDto(
+            name = "Alex Johnson",
+            email = "alex@example.com",
+            location = "San Francisco, CA",
+            bio = "Outdoor enthusiast and tech explorer.",
+            isVerified = true
+        )
+    )
 }
