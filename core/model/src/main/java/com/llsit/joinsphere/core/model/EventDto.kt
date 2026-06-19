@@ -15,5 +15,5 @@ data class EventDto(
     val isSoloFriendly: Boolean = true,
     val creatorId: String = "",
     val createdAt: Long = System.currentTimeMillis(),
-    val attendeeCount: Int = 1
+    val attendeeCount: Int = 1,
 )

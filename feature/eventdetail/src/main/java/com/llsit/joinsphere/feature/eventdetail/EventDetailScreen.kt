@@ -59,9 +59,11 @@ fun EventDetailScreen(
 ) {
     var isLiked by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(Color.White)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -69,9 +71,11 @@ fun EventDetailScreen(
                 .padding(bottom = 100.dp) // Space for sticky button
         ) {
             // Header Image
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+            ) {
                 AsyncImage(
                     model = "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800&h=600&fit=crop&auto=format",
                     contentDescription = null,
