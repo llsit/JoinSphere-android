@@ -1,6 +1,6 @@
 plugins {
     id("joinsphere.android.application.compose")
-    id("joinsphere.firebase")
+    id("joinsphere.supabase")
     id("joinsphere.koin")
     id("joinsphere.navigation")
     alias(libs.plugins.ksp)
@@ -66,12 +66,6 @@ dependencies {
 
     // Navigation Compose
 
-
-    // Firebase
-    implementation(libs.firebase.auth)
-    implementation(libs.firebase.firestore)
-    implementation(libs.firebase.messaging)
-    implementation(libs.firebase.storage)
 
     // Ktor
     implementation(libs.ktor.client.core)

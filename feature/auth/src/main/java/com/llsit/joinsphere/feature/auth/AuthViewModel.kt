@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.llsit.joinsphere.core.domain.repository.UserDataRepository
 import com.llsit.joinsphere.core.domain.usecase.LoginUseCase
+import com.llsit.joinsphere.core.domain.usecase.LogoutUseCase
 import com.llsit.joinsphere.core.domain.usecase.RegisterUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +18,8 @@ import kotlinx.coroutines.launch
 class AuthViewModel(
     private val userDataRepository: UserDataRepository,
     private val loginUseCase: LoginUseCase,
-    private val registerUseCase: RegisterUseCase
+    private val registerUseCase: RegisterUseCase,
+    private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
@@ -65,12 +67,16 @@ class AuthViewModel(
     private fun logout() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            userDataRepository.setAuthToken(null)
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    isAuthenticated = false
-                )
+            logoutUseCase().onSuccess {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isAuthenticated = false
+                    )
+                }
+            }.onFailure { e ->
+                _uiState.update { it.copy(isLoading = false) }
+                _effect.emit(AuthUiEffect.ShowToast(e.localizedMessage ?: "Logout Failed"))
             }
         }
     }

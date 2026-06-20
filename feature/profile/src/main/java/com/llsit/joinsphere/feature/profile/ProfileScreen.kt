@@ -329,9 +329,9 @@ fun ProfileContent(
                 .offset(y = (-10).dp)
         ) {
             val currentStats = listOf(
-                Stat("Events", (profile.stats["attendedCount"] ?: 0).toString()),
-                Stat("Hosted", (profile.stats["hostedCount"] ?: 0).toString()),
-                Stat("Rating", (profile.stats["rating"] ?: 5.0).toString())
+                Stat("Events", profile.stats.attendedCount.toString()),
+                Stat("Hosted", profile.stats.hostedCount.toString()),
+                Stat("Rating", profile.stats.rating.toString())
             )
             Row(modifier = Modifier.fillMaxWidth()) {
                 currentStats.forEachIndexed { index, stat ->
