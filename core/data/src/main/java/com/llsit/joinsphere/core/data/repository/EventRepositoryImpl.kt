@@ -1,28 +1,25 @@
 package com.llsit.joinsphere.core.data.repository
 
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.storage.storage
 import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.model.EventDto
-import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 class EventRepositoryImpl(
-    private val firestore: FirebaseFirestore,
-    private val storage: FirebaseStorage
+    private val supabase: SupabaseClient
 ) : EventRepository {
 
     override suspend fun createEvent(event: EventDto): Result<Unit> = runCatching {
-        val documentRef = firestore.collection("events").document()
-        val finalEvent = event.copy(id = documentRef.id)
-        documentRef.set(finalEvent).await()
+        supabase.postgrest["events"].insert(event)
     }
 
     override suspend fun uploadCoverImage(imageByteArray: ByteArray): Result<String> = runCatching {
-        val fileName = UUID.randomUUID().toString()
-        val storageRef = storage.reference.child("event_covers/$fileName.jpg")
+        val fileName = "${UUID.randomUUID()}.jpg"
+        val bucket = supabase.storage["event_covers"]
         
-        storageRef.putBytes(imageByteArray).await()
-        storageRef.downloadUrl.await().toString()
+        bucket.upload(fileName, imageByteArray)
+        bucket.publicUrl(fileName)
     }
 }

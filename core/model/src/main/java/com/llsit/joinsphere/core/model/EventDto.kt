@@ -1,5 +1,8 @@
 package com.llsit.joinsphere.core.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class EventDto(
     val id: String = "",
     val title: String = "",

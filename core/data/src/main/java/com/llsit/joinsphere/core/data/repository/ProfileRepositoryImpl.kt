@@ -1,36 +1,48 @@
 package com.llsit.joinsphere.core.data.repository
 
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.storage.storage
 import com.llsit.joinsphere.core.data.local.PreferencesDataSource
 import com.llsit.joinsphere.core.domain.repository.ProfileRepository
 import com.llsit.joinsphere.core.model.UserProfileDto
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.tasks.await
 
 class ProfileRepositoryImpl(
-    private val firestore: FirebaseFirestore,
-    private val storage: FirebaseStorage,
+    private val supabase: SupabaseClient,
     private val pref: PreferencesDataSource
 ) : ProfileRepository {
     override suspend fun getUserProfile(): Result<UserProfileDto> = runCatching {
-        firestore.collection("users")
-            .document(pref.authToken.first() ?: "")
-            .get()
-            .await()
-            .toObject(UserProfileDto::class.java) ?: throw Exception("ไม่พบข้อมูลโปรไฟล์")
+        val userId = supabase.auth.currentUserOrNull()?.id ?: throw Exception("ไม่พบข้อมูลผู้ใช้")
+        
+        supabase.postgrest["users"]
+            .select {
+                filter {
+                    eq("id", userId)
+                }
+            }
+            .decodeSingle<UserProfileDto>()
     }
 
     override suspend fun updateImageProfile(imageByteArray: ByteArray): Result<String> = runCatching {
-        val userId = pref.authToken.first() ?: throw Exception("ไม่พบข้อมูลผู้ใช้")
-        val storageRef = storage.reference.child("profile_images/$userId.jpg")
+        val userId = supabase.auth.currentUserOrNull()?.id ?: throw Exception("ไม่พบข้อมูลผู้ใช้")
+        val bucket = supabase.storage["profile_images"]
+        val fileName = "$userId.jpg"
 
-        storageRef.putBytes(imageByteArray).await()
-        val downloadUrl = storageRef.downloadUrl.await().toString()
-        firestore.collection("users")
-            .document(userId)
-            .update("avatarUrl", downloadUrl)
-            .await()
+        bucket.upload(fileName, imageByteArray) {
+            upsert = true
+        }
+        
+        val downloadUrl = bucket.publicUrl(fileName)
+        
+        supabase.postgrest["users"].update({
+            UserProfileDto::avatarUrl setTo downloadUrl
+        }) {
+            filter {
+                eq("id", userId)
+            }
+        }
             
         downloadUrl
     }

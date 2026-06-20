@@ -1,21 +1,25 @@
 package com.llsit.joinsphere.core.data.repository
 
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.postgrest.postgrest
 import com.llsit.joinsphere.core.domain.repository.AuthRepository
 import com.llsit.joinsphere.core.model.UserProfileDto
-import kotlinx.coroutines.tasks.await
+import io.github.jan.supabase.postgrest.from
 
 class AuthRepositoryImpl(
-    private val auth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
+    private val supabase: SupabaseClient
 ) : AuthRepository {
     override suspend fun login(
         email: String,
         password: String
     ): Result<String> = runCatching {
-        auth.signInWithEmailAndPassword(email, password).await()
-        val userId = auth.currentUser?.uid
+        supabase.auth.signInWith(Email) {
+            this.email = email
+            this.password = password
+        }
+        val userId = supabase.auth.currentUserOrNull()?.id
         userId ?: throw Exception("User not found")
     }
 
@@ -24,24 +28,25 @@ class AuthRepositoryImpl(
         email: String,
         password: String
     ): Result<String> = runCatching {
-        auth.createUserWithEmailAndPassword(email, password).await()
-        val userId = auth.currentUser?.uid
+        val authResult = supabase.auth.signUpWith(Email) {
+            this.email = email
+            this.password = password
+        }
+        val userId = authResult?.id
         userId ?: throw Exception("User not found")
 
         val initialProfile = UserProfileDto(
+            id = userId,
             name = name,
             email = email
         )
 
-        firestore.collection("users")
-            .document(userId)
-            .set(initialProfile)
-            .await()
+        supabase.from("users").insert(initialProfile)
 
         userId
     }
 
     override suspend fun logout(): Result<Unit> = runCatching {
-        auth.signOut()
+        supabase.auth.signOut()
     }
 }

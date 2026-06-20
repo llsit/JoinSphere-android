@@ -12,16 +12,11 @@ class FirebaseConventionPlugin : Plugin<Project> {
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
             
             plugins.apply("com.google.gms.google-services")
-//            plugins.apply("com.google.firebase.crashlytics")
 
             dependencies {
                 val bom = libs.findLibrary("firebase-bom").get()
                 add("implementation", platform(bom))
-                add("implementation", libs.findLibrary("firebase-auth").get())
-                add("implementation", libs.findLibrary("firebase-firestore").get())
-                add("implementation", libs.findLibrary("firebase-storage").get())
                 add("implementation", libs.findLibrary("firebase-analytics").get())
-//                add("implementation", libs.findLibrary("firebase-crashlytics").get())
             }
         }
     }
