@@ -77,7 +77,8 @@ class CreateEventViewModel(
                     maxAttendees = currentState.maxAttendees.toIntOrNull(),
                     isFree = currentState.isFree,
                     price = currentState.price.toDoubleOrNull() ?: 0.0,
-                    isSoloFriendly = currentState.isSoloFriendly
+                    isSoloFriendly = currentState.isSoloFriendly,
+                    creatorId = "" // This will be set in the UseCase
                 )
 
                 createEventUseCase(

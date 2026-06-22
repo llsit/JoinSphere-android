@@ -24,19 +24,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +48,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -56,6 +56,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import com.llsit.joinsphere.core.design.Card
+import com.llsit.joinsphere.core.model.EventNetworkModel
+import org.koin.androidx.compose.koinViewModel
 
 data class Category(val id: String, val label: String)
 data class Event(
@@ -184,12 +186,14 @@ val NEARBY = listOf(
 
 @Composable
 fun DiscoverScreen(
-    onEventClick: (Int) -> Unit = {},
+    viewModel: DiscoverViewModel = koinViewModel(),
+    onEventClick: (String) -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onSearchClick: () -> Unit = {}
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     var activeCategory by remember { mutableStateOf("all") }
-    val liked = remember { mutableStateListOf<Int>() }
+    val liked = remember { mutableStateListOf<String>() }
 
     Column(
         modifier = Modifier
@@ -307,100 +311,90 @@ fun DiscoverScreen(
             }
         }
 
-        // Featured events section
-        Column(modifier = Modifier.padding(bottom = 24.dp)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Trending near you",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.3).sp
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    modifier = Modifier.clickable { }
+        when (val state = uiState) {
+            is DiscoverUiState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "See all",
-                        color = Color(0xFF1757F0),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = null,
-                        tint = Color(0xFF1757F0),
-                        modifier = Modifier.size(14.dp)
-                    )
+                    CircularProgressIndicator(color = Color(0xFF1757F0))
                 }
             }
 
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                modifier = Modifier.padding(bottom = 4.dp)
-            ) {
-                items(FEATURED) { ev ->
-                    FeaturedEventCard(
-                        event = ev,
-                        isLiked = liked.contains(ev.id),
-                        onLikeToggle = {
-                            if (liked.contains(ev.id)) liked.remove(ev.id) else liked.add(ev.id)
-                        },
-                        onClick = { onEventClick(ev.id) }
-                    )
-                }
-            }
-        }
-
-        // Nearby this week section
-        Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 24.dp)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "This week",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.3).sp
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    modifier = Modifier.clickable { }
+            is DiscoverUiState.Error -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "See all",
-                        color = Color(0xFF1757F0),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = null,
-                        tint = Color(0xFF1757F0),
-                        modifier = Modifier.size(14.dp)
-                    )
+                    Text(text = state.message, color = Color.Red, textAlign = TextAlign.Center)
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                NEARBY.forEach { ev ->
-                    NearbyEventCard(
-                        event = ev,
-                        onClick = { onEventClick(ev.id) }
-                    )
+            is DiscoverUiState.Success -> {
+                // Featured events section
+                Column(modifier = Modifier.padding(bottom = 24.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Trending near you",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.3).sp
+                        )
+                    }
+
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    ) {
+                        items(state.trending) { ev ->
+                            FeaturedEventCard(
+                                event = ev,
+                                isLiked = liked.contains(ev.id),
+                                onLikeToggle = {
+                                    if (liked.contains(ev.id)) liked.remove(ev.id) else liked.add(ev.id)
+                                },
+                                onClick = { onEventClick(ev.id) }
+                            )
+                        }
+                    }
+                }
+
+                // Nearby this week section
+                Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 24.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "This week",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.3).sp
+                        )
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        state.thisWeek.forEach { ev ->
+                            NearbyEventCard(
+                                event = ev,
+                                onClick = { onEventClick(ev.id) }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -409,7 +403,7 @@ fun DiscoverScreen(
 
 @Composable
 fun FeaturedEventCard(
-    event: Event,
+    event: EventNetworkModel,
     isLiked: Boolean,
     onLikeToggle: () -> Unit,
     onClick: () -> Unit
@@ -422,7 +416,7 @@ fun FeaturedEventCard(
         Column {
             Box(modifier = Modifier.height(160.dp)) {
                 AsyncImage(
-                    model = event.image,
+                    model = "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=700&h=460&fit=crop&auto=format",
                     contentDescription = event.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -458,51 +452,6 @@ fun FeaturedEventCard(
                         )
                     }
                 }
-
-                // Solo Badge
-                Surface(
-                    color = Color.White.copy(alpha = 0.95f),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .align(Alignment.BottomStart)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            tint = Color(0xFF1757F0),
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Text(
-                            text = "${event.soloPercent}% came solo",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1757F0)
-                        )
-                    }
-                }
-
-                // Price
-                Surface(
-                    color = Color.White.copy(alpha = 0.95f),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .align(Alignment.BottomEnd)
-                ) {
-                    Text(
-                        text = event.price,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFF0D0F14)
-                    )
-                }
             }
 
             Column(modifier = Modifier.padding(16.dp)) {
@@ -512,7 +461,7 @@ fun FeaturedEventCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = event.category,
+                        text = event.category ?: "Event",
                         color = Color(0xFF1757F0),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
@@ -528,17 +477,10 @@ fun FeaturedEventCard(
                             modifier = Modifier.size(12.dp)
                         )
                         Text(
-                            text = event.rating.toString(),
+                            text = "4.9",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        if (event.reviews != null) {
-                            Text(
-                                text = "(${event.reviews})",
-                                color = Color(0xFF737880),
-                                fontSize = 12.sp
-                            )
-                        }
                     }
                 }
 
@@ -565,22 +507,10 @@ fun FeaturedEventCard(
                         modifier = Modifier.size(12.dp)
                     )
                     Text(
-                        text = "${event.date} · ${event.time}",
+                        text = event.startTimestamp,
                         color = Color(0xFF737880),
                         fontSize = 12.sp
                     )
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Place,
-                        contentDescription = null,
-                        tint = Color(0xFF737880),
-                        modifier = Modifier.size(12.dp)
-                    )
-                    Text(text = event.location, color = Color(0xFF737880), fontSize = 12.sp)
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -593,43 +523,12 @@ fun FeaturedEventCard(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        AvatarStack(avatars = event.avatars, size = 24)
                         Text(
-                            text = "${event.attendees} going",
+                            text = "${event.attendeesCount} going",
                             color = Color(0xFF737880),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium
                         )
-                    }
-
-                    if (event.hostVerified && event.hostAvatar != null) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            AsyncImage(
-                                model = event.hostAvatar,
-                                contentDescription = event.hostName,
-                                modifier = Modifier
-                                    .size(18.dp)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                            Icon(
-                                imageVector = Icons.Default.Shield,
-                                contentDescription = null,
-                                tint = Color(0xFF1757F0),
-                                modifier = Modifier.size(11.dp)
-                            )
-                            if (event.hostName != null) {
-                                Text(
-                                    text = event.hostName,
-                                    color = Color(0xFF737880),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
                     }
                 }
             }
@@ -638,7 +537,7 @@ fun FeaturedEventCard(
 }
 
 @Composable
-fun NearbyEventCard(event: Event, onClick: () -> Unit) {
+fun NearbyEventCard(event: EventNetworkModel, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -647,31 +546,11 @@ fun NearbyEventCard(event: Event, onClick: () -> Unit) {
         Row(modifier = Modifier.height(110.dp)) {
             Box(modifier = Modifier.width(100.dp)) {
                 AsyncImage(
-                    model = event.image,
+                    model = "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&h=300&fit=crop&auto=format",
                     contentDescription = event.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
-                if (event.hostVerified) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color.White,
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .size(22.dp)
-                            .align(Alignment.BottomStart),
-                        shadowElevation = 2.dp
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.Shield,
-                                contentDescription = null,
-                                tint = Color(0xFF1757F0),
-                                modifier = Modifier.size(11.dp)
-                            )
-                        }
-                    }
-                }
             }
 
             Column(
@@ -685,16 +564,10 @@ fun NearbyEventCard(event: Event, onClick: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = event.category,
+                        text = event.category ?: "Event",
                         color = Color(0xFF1757F0),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = event.price,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (event.price == "Free") Color(0xFF16A34A) else Color(0xFF0D0F14)
                     )
                 }
 
@@ -718,7 +591,7 @@ fun NearbyEventCard(event: Event, onClick: () -> Unit) {
                         modifier = Modifier.size(11.dp)
                     )
                     Text(
-                        text = "${event.date} · ${event.time}",
+                        text = event.startTimestamp,
                         color = Color(0xFF737880),
                         fontSize = 12.sp
                     )
@@ -733,33 +606,11 @@ fun NearbyEventCard(event: Event, onClick: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            tint = Color(0xFF1757F0),
-                            modifier = Modifier.size(11.dp)
-                        )
                         Text(
-                            text = "${event.soloPercent}% solo",
+                            text = "${event.attendeesCount} joined",
                             color = Color(0xFF1757F0),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium
-                        )
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = null,
-                            tint = Color(0xFFF59E0B),
-                            modifier = Modifier.size(11.dp)
-                        )
-                        Text(
-                            text = event.rating.toString(),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
                         )
                     }
                 }

@@ -6,33 +6,33 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class EventDto(
     @SerialName("id")
-    val id: String = "",
+    val id: String? = null,
     @SerialName("title")
-    val title: String = "",
+    val title: String,
     @SerialName("category_id")
-    val categoryId: String = "",
+    val categoryId: String? = "",
     @SerialName("description")
-    val description: String = "",
+    val description: String? = "",
     @SerialName("cover_image_url")
-    val coverImageUrl: String = "",
+    val coverImageUrl: String? = "",
     @SerialName("date")
-    val date: String = "",
+    val date: String,
     @SerialName("time")
-    val time: String = "",
+    val time: String,
     @SerialName("location")
-    val location: String = "",
+    val location: String? = "",
     @SerialName("max_attendees")
     val maxAttendees: Int? = null,
     @SerialName("is_free")
-    val isFree: Boolean = true,
+    val isFree: Boolean? = true,
     @SerialName("price")
-    val price: Double = 0.0,
+    val price: Double? = 0.0,
     @SerialName("is_solo_friendly")
-    val isSoloFriendly: Boolean = true,
+    val isSoloFriendly: Boolean? = true,
     @SerialName("creator_id")
-    val creatorId: String = "",
+    val creatorId: String,
     @SerialName("created_at")
-    val createdAt: Long = System.currentTimeMillis(),
+    val createdAt: Long? = null,
     @SerialName("attendee_count")
-    val attendeeCount: Int = 1,
+    val attendeeCount: Int? = 1,
 )

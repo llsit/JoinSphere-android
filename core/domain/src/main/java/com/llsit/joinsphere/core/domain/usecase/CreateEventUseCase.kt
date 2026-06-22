@@ -32,7 +32,6 @@ class CreateEventUseCase(
             }
 
             val finalEvent = eventData.copy(
-                id = eventId,
                 creatorId = currentUserId,
                 coverImageUrl = onlineImageUrl
             )
