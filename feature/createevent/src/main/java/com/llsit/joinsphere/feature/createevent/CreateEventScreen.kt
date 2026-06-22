@@ -3,10 +3,16 @@ package com.llsit.joinsphere.feature.createevent
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.net.Uri
+import android.os.Environment
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.core.content.FileProvider
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -37,6 +43,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.ChevronLeft
+import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -103,11 +110,33 @@ fun CreateEventScreen(
 
     val context = LocalContext.current
     var showMap by remember { mutableStateOf(false) }
+    var showImageSourceDialog by remember { mutableStateOf(false) }
+    var tempPhotoUri by remember { mutableStateOf<Uri?>(null) }
+
+    fun createImageUri(): Uri {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        val file = File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir)
+        return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && tempPhotoUri != null) {
+            viewModel.processIntent(CreateEventIntent.ImageSelected(tempPhotoUri!!))
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is CreateEventUiEffect.OpenGallery -> imagePickerLauncher.launch("image/*")
+                is CreateEventUiEffect.OpenCamera -> {
+                    val uri = createImageUri()
+                    tempPhotoUri = uri
+                    cameraLauncher.launch(uri)
+                }
                 is CreateEventUiEffect.OpenMap -> showMap = true
                 is CreateEventUiEffect.ShowToast -> {
                     Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
@@ -116,11 +145,25 @@ fun CreateEventScreen(
         }
     }
 
+    if (showImageSourceDialog) {
+        ImageSourceDialog(
+            onDismiss = { showImageSourceDialog = false },
+            onGalleryClick = {
+                showImageSourceDialog = false
+                viewModel.dispatchGalleryEffect()
+            },
+            onCameraClick = {
+                showImageSourceDialog = false
+                viewModel.dispatchCameraEffect()
+            }
+        )
+    }
+
     if (showMap) {
-//        LocationPickerDialog(
-//            onDismiss = { showMap = false },
-//            onLocationSelected = { viewModel.processIntent(CreateEventIntent.UpdateLocation(it)) }
-//        )
+        LocationPickerDialog(
+            onDismiss = { showMap = false },
+            onLocationSelected = { viewModel.processIntent(CreateEventIntent.UpdateLocation(it)) }
+        )
     }
 
     if (uiState.isSubmitted) {
@@ -186,7 +229,7 @@ fun CreateEventScreen(
                                 )
                             },
                             imageUri = uiState.localImageUri,
-                            onImageClick = { viewModel.dispatchGalleryEffect() }
+                            onImageClick = { showImageSourceDialog = true }
                         )
 
                         2 -> Step2(
@@ -931,6 +974,49 @@ fun CustomCreateTextField(
             focusedBorderColor = Color.Transparent
         ),
         singleLine = true
+    )
+}
+
+@Composable
+fun ImageSourceDialog(
+    onDismiss: () -> Unit,
+    onGalleryClick: () -> Unit,
+    onCameraClick: () -> Unit
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Choose image source") },
+        text = {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onCameraClick() }
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(Icons.Outlined.CameraAlt, contentDescription = null)
+                    Text("Camera")
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onGalleryClick() }
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(Icons.Outlined.PhotoLibrary, contentDescription = null)
+                    Text("Gallery")
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
     )
 }
 

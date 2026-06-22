@@ -18,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,17 +28,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.rememberCameraPositionState
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.osmdroid.config.Configuration
+import org.osmdroid.events.DelayedMapListener
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
 import java.util.Locale
 
 @Composable
@@ -46,34 +55,73 @@ fun LocationPickerDialog(
     onLocationSelected: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val bangkok = LatLng(13.7563, 100.5018)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(bangkok, 15f)
+    
+    // Initialize osmdroid configuration
+    Configuration.getInstance().userAgentValue = context.packageName
+
+    val bangkok = GeoPoint(13.7563, 100.5018)
+    
+    val mapView = remember {
+        MapView(context).apply {
+            setTileSource(TileSourceFactory.MAPNIK)
+            setMultiTouchControls(true)
+            controller.setZoom(15.0)
+            controller.setCenter(bangkok)
+        }
     }
 
     var addressText by remember { mutableStateOf("ดึงข้อมูลตำแหน่ง...") }
     var isResolvingAddress by remember { mutableStateOf(false) }
+    var currentCenter by remember { mutableStateOf(bangkok) }
 
-    LaunchedEffect(cameraPositionState.isMoving) {
-        if (!cameraPositionState.isMoving) {
-            isResolvingAddress = true
-            val target = cameraPositionState.position.target
-            withContext(Dispatchers.IO) {
-                try {
-                    val geocoder = Geocoder(context, Locale.getDefault())
-                    val addresses = geocoder.getFromLocation(target.latitude, target.longitude, 1)
-                    if (!addresses.isNullOrEmpty()) {
-                        val address = addresses[0]
-                        val addressLine = address.getAddressLine(0) ?: "${target.latitude}, ${target.longitude}"
-                        addressText = addressLine
-                    } else {
-                        addressText = "${target.latitude}, ${target.longitude}"
-                    }
-                } catch (e: Exception) {
-                    addressText = "${target.latitude}, ${target.longitude}"
-                } finally {
-                    isResolvingAddress = false
+    // Lifecycle observer for MapView
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> mapView.onResume()
+                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            mapView.onDetach()
+        }
+    }
+
+    LaunchedEffect(mapView) {
+        mapView.addMapListener(DelayedMapListener(object : MapListener {
+            override fun onScroll(event: ScrollEvent?): Boolean {
+                currentCenter = mapView.mapCenter as GeoPoint
+                return true
+            }
+
+            override fun onZoom(event: ZoomEvent?): Boolean {
+                currentCenter = mapView.mapCenter as GeoPoint
+                return true
+            }
+        }, 500))
+    }
+
+    LaunchedEffect(currentCenter) {
+        isResolvingAddress = true
+        withContext(Dispatchers.IO) {
+            try {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val addresses = geocoder.getFromLocation(currentCenter.latitude, currentCenter.longitude, 1)
+                if (!addresses.isNullOrEmpty()) {
+                    val address = addresses[0]
+                    val addressLine = address.getAddressLine(0) ?: "${currentCenter.latitude}, ${currentCenter.longitude}"
+                    addressText = addressLine
+                } else {
+                    addressText = "${currentCenter.latitude}, ${currentCenter.longitude}"
                 }
+            } catch (e: Exception) {
+                addressText = "${currentCenter.latitude}, ${currentCenter.longitude}"
+            } finally {
+                isResolvingAddress = false
             }
         }
     }
@@ -83,9 +131,9 @@ fun LocationPickerDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState
+            AndroidView(
+                factory = { mapView },
+                modifier = Modifier.fillMaxSize()
             )
 
             // Center Pin Indicator
@@ -108,7 +156,7 @@ fun LocationPickerDialog(
                     .padding(24.dp)
             ) {
                 Text(
-                    text = "สถานที่ตั้ง",
+                    text = "สถานที่ตั้ง (OpenStreetMap)",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF737880)

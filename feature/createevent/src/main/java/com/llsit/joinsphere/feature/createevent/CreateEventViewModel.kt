@@ -104,6 +104,10 @@ class CreateEventViewModel(
         viewModelScope.launch { _effect.emit(CreateEventUiEffect.OpenGallery) }
     }
 
+    fun dispatchCameraEffect() {
+        viewModelScope.launch { _effect.emit(CreateEventUiEffect.OpenCamera) }
+    }
+
     fun dispatchMapEffect() {
         viewModelScope.launch { _effect.emit(CreateEventUiEffect.OpenMap) }
     }

@@ -57,6 +57,7 @@ sealed interface CreateEventIntent {
 
 sealed interface CreateEventUiEffect {
     object OpenGallery : CreateEventUiEffect
+    object OpenCamera : CreateEventUiEffect
     object OpenMap : CreateEventUiEffect
     data class ShowToast(val message: String) : CreateEventUiEffect
 }
