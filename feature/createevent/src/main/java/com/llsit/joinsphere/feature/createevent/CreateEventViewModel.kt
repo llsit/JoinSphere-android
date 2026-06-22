@@ -1,5 +1,6 @@
 package com.llsit.joinsphere.feature.createevent
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.llsit.joinsphere.core.domain.usecase.CreateEventUseCase
@@ -72,7 +73,7 @@ class CreateEventViewModel(
                     description = currentState.description,
                     date = currentState.date,
                     time = currentState.time,
-                    location = currentState.location ,
+                    location = currentState.location,
                     maxAttendees = currentState.maxAttendees.toIntOrNull(),
                     isFree = currentState.isFree,
                     price = currentState.price.toDoubleOrNull() ?: 0.0,
@@ -87,6 +88,11 @@ class CreateEventViewModel(
                 _uiState.update { it.copy(isLoading = false, isSubmitted = true) }
                 _effect.emit(CreateEventUiEffect.ShowToast("สร้างกิจกรรมสำเร็จ!"))
             } catch (e: Exception) {
+                Log.e(
+                    "CreateEventViewModel",
+                    "Error publishing event + ${e.localizedMessage ?: "Publish Failed"}",
+                    e
+                )
                 _uiState.update { it.copy(isLoading = false) }
                 _effect.emit(CreateEventUiEffect.ShowToast(e.localizedMessage ?: "Publish Failed"))
             }

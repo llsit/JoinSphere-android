@@ -12,6 +12,7 @@ import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.domain.repository.ProfileRepository
 import com.llsit.joinsphere.core.domain.repository.UserDataRepository
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.SettingsSessionManager
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.storage.Storage
@@ -27,7 +28,9 @@ val dataModule = module {
             supabaseUrl = "https://zafcvisvvwsxxefvduja.supabase.co",
             supabaseKey = "sb_publishable_9suESlI7TT5YFSDGHs0N6Q_uPDi6jCz"
         ) {
-            install(Auth)
+            install(Auth) {
+                sessionManager = SettingsSessionManager(key = "joinsphere_session")
+            }
             install(Postgrest)
             install(Storage)
         }

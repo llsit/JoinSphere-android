@@ -14,7 +14,9 @@ class ProfileRepositoryImpl(
     private val pref: PreferencesDataSource
 ) : ProfileRepository {
     override suspend fun getUserProfile(): Result<UserProfileDto> = runCatching {
-        val userId = supabase.auth.currentUserOrNull()?.id ?: throw Exception("ไม่พบข้อมูลผู้ใช้")
+        val userId = supabase.auth.currentUserOrNull()?.id
+            ?: pref.authToken.first()
+            ?: throw Exception("ไม่พบข้อมูลผู้ใช้")
         
         supabase.postgrest["users"]
             .select {
@@ -26,7 +28,9 @@ class ProfileRepositoryImpl(
     }
 
     override suspend fun updateImageProfile(imageByteArray: ByteArray): Result<String> = runCatching {
-        val userId = supabase.auth.currentUserOrNull()?.id ?: throw Exception("ไม่พบข้อมูลผู้ใช้")
+        val userId = supabase.auth.currentUserOrNull()?.id
+            ?: pref.authToken.first()
+            ?: throw Exception("ไม่พบข้อมูลผู้ใช้")
         val bucket = supabase.storage["profile_images"]
         val fileName = "$userId.jpg"
 

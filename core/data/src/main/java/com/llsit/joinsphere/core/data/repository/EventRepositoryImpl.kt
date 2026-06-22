@@ -1,25 +1,31 @@
 package com.llsit.joinsphere.core.data.repository
 
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.storage.storage
 import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.model.EventDto
-import java.util.UUID
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.storage.storage
 
 class EventRepositoryImpl(
     private val supabase: SupabaseClient
 ) : EventRepository {
 
     override suspend fun createEvent(event: EventDto): Result<Unit> = runCatching {
-        supabase.postgrest["events"].insert(event)
+        supabase.from("events").insert(event)
     }
 
-    override suspend fun uploadCoverImage(imageByteArray: ByteArray): Result<String> = runCatching {
-        val fileName = "${UUID.randomUUID()}.jpg"
+    override suspend fun uploadCoverImage(
+        userId: String,
+        eventId: String,
+        imageByteArray: ByteArray
+    ): Result<String> = runCatching {
+
+        val fileName = "$userId/${eventId}.jpg"
         val bucket = supabase.storage["event_covers"]
-        
-        bucket.upload(fileName, imageByteArray)
+
+        bucket.upload(fileName, imageByteArray) {
+            upsert = true
+        }
         bucket.publicUrl(fileName)
     }
 }
