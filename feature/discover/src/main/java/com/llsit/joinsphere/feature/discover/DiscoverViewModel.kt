@@ -2,6 +2,7 @@ package com.llsit.joinsphere.feature.discover
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.llsit.joinsphere.core.domain.usecase.GetCurrentLocationUseCase
 import com.llsit.joinsphere.core.domain.usecase.GetDiscoverFeedsUseCase
 import com.llsit.joinsphere.core.model.EventNetworkModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,8 @@ sealed interface DiscoverUiState {
     data object Loading : DiscoverUiState
     data class Success(
         val trending: List<EventNetworkModel>,
-        val thisWeek: List<EventNetworkModel>
+        val thisWeek: List<EventNetworkModel>,
+        val address: String = "Bangkok"
     ) : DiscoverUiState
     data class Error(val message: String) : DiscoverUiState
 }
@@ -24,7 +26,8 @@ sealed interface DiscoverIntent {
 }
 
 class DiscoverViewModel(
-    private val getDiscoverFeedsUseCase: GetDiscoverFeedsUseCase
+    private val getDiscoverFeedsUseCase: GetDiscoverFeedsUseCase,
+    private val getCurrentLocationUseCase: GetCurrentLocationUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<DiscoverUiState>(DiscoverUiState.Loading)
@@ -43,12 +46,19 @@ class DiscoverViewModel(
     private fun fetchFeeds() {
         viewModelScope.launch {
             _uiState.update { DiscoverUiState.Loading }
-            getDiscoverFeedsUseCase()
+
+            val userLocation = getCurrentLocationUseCase()
+
+            getDiscoverFeedsUseCase(
+                lat = userLocation?.lat ?: 13.7563,
+                lng = userLocation?.lng ?: 100.5018
+            )
                 .onSuccess { response ->
                     _uiState.update {
                         DiscoverUiState.Success(
                             trending = response.trending,
-                            thisWeek = response.thisWeek
+                            thisWeek = response.thisWeek,
+                            address = userLocation?.address ?: "Bangkok"
                         )
                     }
                 }

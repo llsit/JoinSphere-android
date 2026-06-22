@@ -217,7 +217,10 @@ fun DiscoverScreen(
             ) {
                 Column {
                     Text(
-                        text = "San Francisco, CA",
+                        text = when (val state = uiState) {
+                            is DiscoverUiState.Success -> state.address
+                            else -> "ดึงข้อมูลตำแหน่ง..."
+                        },
                         color = Color(0xFF737880),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,

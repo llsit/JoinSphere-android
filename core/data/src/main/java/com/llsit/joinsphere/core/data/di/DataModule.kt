@@ -2,14 +2,17 @@ package com.llsit.joinsphere.core.data.di
 
 import android.content.Context
 import androidx.datastore.preferences.preferencesDataStore
+import com.google.android.gms.location.LocationServices
 import com.llsit.joinsphere.core.data.local.PreferencesDataSource
 import com.llsit.joinsphere.core.data.local.SupabaseSessionManager
 import com.llsit.joinsphere.core.data.repository.AuthRepositoryImpl
 import com.llsit.joinsphere.core.data.repository.EventRepositoryImpl
+import com.llsit.joinsphere.core.data.repository.LocationRepositoryImpl
 import com.llsit.joinsphere.core.data.repository.OfflineUserDataRepository
 import com.llsit.joinsphere.core.data.repository.ProfileRepositoryImpl
 import com.llsit.joinsphere.core.domain.repository.AuthRepository
 import com.llsit.joinsphere.core.domain.repository.EventRepository
+import com.llsit.joinsphere.core.domain.repository.LocationRepository
 import com.llsit.joinsphere.core.domain.repository.ProfileRepository
 import com.llsit.joinsphere.core.domain.repository.UserDataRepository
 import io.github.jan.supabase.auth.Auth
@@ -40,6 +43,8 @@ val dataModule = module {
     }
     single { PreferencesDataSource(get()) }
     single<SessionManager> { SupabaseSessionManager(get()) }
+    single { LocationServices.getFusedLocationProviderClient(androidContext()) }
+    single<LocationRepository> { LocationRepositoryImpl(androidContext(), get()) }
     single<UserDataRepository> { OfflineUserDataRepository(get()) }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
     single<ProfileRepository> { ProfileRepositoryImpl(get(), get()) }
