@@ -1,13 +1,16 @@
 package com.llsit.joinsphere.feature.createevent
 
+import android.Manifest
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Environment
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import java.io.File
 import java.text.SimpleDateFormat
@@ -128,6 +131,16 @@ fun CreateEventScreen(
         }
     }
 
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.dispatchCameraEffect()
+        } else {
+            Toast.makeText(context, "Camera permission is required to take photos", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
@@ -154,7 +167,15 @@ fun CreateEventScreen(
             },
             onCameraClick = {
                 showImageSourceDialog = false
-                viewModel.dispatchCameraEffect()
+                val permissionCheck = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.CAMERA
+                )
+                if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+                    viewModel.dispatchCameraEffect()
+                } else {
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                }
             }
         )
     }
@@ -546,8 +567,8 @@ fun Step1(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 10.dp)
             )
+            val chunkedCategories = remember { CATEGORIES.chunked(4) }
             Row(modifier = Modifier.fillMaxWidth()) {
-                val chunkedCategories = CATEGORIES.chunked(4)
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     chunkedCategories.forEach { rowCategories ->
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -814,9 +835,11 @@ fun Step3(
                     contentScale = ContentScale.Crop
                 )
                 Column(modifier = Modifier.padding(16.dp)) {
+                    val categoryLabel = remember(category) {
+                        CATEGORIES.find { it.id == category }?.label?.uppercase() ?: "CATEGORY"
+                    }
                     Text(
-                        text = CATEGORIES.find { it.id == category }?.label?.uppercase()
-                            ?: "CATEGORY",
+                        text = categoryLabel,
                         color = Color(0xFF1757F0),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold

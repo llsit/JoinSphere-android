@@ -115,7 +115,8 @@ private fun mainNavEntries(
 
         entry<SettingsKey> {
             SettingsScreen(
-                onBackClick = { navigator.goBack() }
+                onBackClick = { navigator.goBack() },
+                onLogout = { navigator.navigateToAuth() }
             )
         }
 

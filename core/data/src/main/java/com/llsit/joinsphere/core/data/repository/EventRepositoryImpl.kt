@@ -4,12 +4,12 @@ import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.model.DiscoverFeedsResponse
 import com.llsit.joinsphere.core.model.EventDto
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.functions.functions
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.storage.storage
 import io.ktor.client.call.body
 import io.ktor.client.request.parameter
-import timber.log.Timber
 
 class EventRepositoryImpl(
     private val supabase: SupabaseClient
@@ -24,13 +24,11 @@ class EventRepositoryImpl(
         eventId: String,
         imageByteArray: ByteArray
     ): Result<String> = runCatching {
-
-        val fileName = "$userId/${eventId}.jpg"
+        val finalUserId = supabase.auth.currentUserOrNull()?.id ?: userId
+        val fileName = "$finalUserId/$eventId.jpg"
         val bucket = supabase.storage["event_covers"]
 
-        bucket.upload(fileName, imageByteArray) {
-            upsert = true
-        }
+        bucket.upload(fileName, imageByteArray)
         bucket.publicUrl(fileName)
     }
 

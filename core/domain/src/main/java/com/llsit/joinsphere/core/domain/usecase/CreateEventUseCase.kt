@@ -5,7 +5,9 @@ import android.net.Uri
 import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.domain.repository.UserDataRepository
 import com.llsit.joinsphere.core.model.EventDto
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 class CreateEventUseCase(
@@ -21,10 +23,13 @@ class CreateEventUseCase(
             val eventId = UUID.randomUUID().toString()
 
             val onlineImageUrl = if (localImageUri != null) {
-                val inputStream = context.contentResolver.openInputStream(localImageUri)
-                    ?: throw Exception("ไม่สามารถอ่านไฟล์รูปภาพได้")
-                val bytes = inputStream.readBytes()
-                inputStream.close()
+                val bytes = withContext(Dispatchers.IO) {
+                    val inputStream = context.contentResolver.openInputStream(localImageUri)
+                        ?: throw Exception("ไม่สามารถอ่านไฟล์รูปภาพได้")
+                    val readBytes = inputStream.readBytes()
+                    inputStream.close()
+                    readBytes
+                }
 
                 eventRepository.uploadCoverImage(currentUserId, eventId, bytes).getOrThrow()
             } else {

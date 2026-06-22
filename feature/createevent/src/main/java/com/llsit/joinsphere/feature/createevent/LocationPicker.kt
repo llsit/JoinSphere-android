@@ -56,12 +56,12 @@ fun LocationPickerDialog(
 ) {
     val context = LocalContext.current
     
-    // Initialize osmdroid configuration
-    Configuration.getInstance().userAgentValue = context.packageName
-
-    val bangkok = GeoPoint(13.7563, 100.5018)
+    val bangkok = remember { GeoPoint(13.7563, 100.5018) }
     
     val mapView = remember {
+        // Initialize osmdroid configuration once
+        Configuration.getInstance().userAgentValue = context.packageName
+
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
