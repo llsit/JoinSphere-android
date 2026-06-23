@@ -419,7 +419,7 @@ fun FeaturedEventCard(
         Column {
             Box(modifier = Modifier.height(160.dp)) {
                 AsyncImage(
-                    model = "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=700&h=460&fit=crop&auto=format",
+                    model = event.coverImageUrl,
                     contentDescription = event.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -510,7 +510,7 @@ fun FeaturedEventCard(
                         modifier = Modifier.size(12.dp)
                     )
                     Text(
-                        text = event.startTimestamp,
+                        text = event.startTimestamp.toString(),
                         color = Color(0xFF737880),
                         fontSize = 12.sp
                     )
@@ -549,7 +549,7 @@ fun NearbyEventCard(event: EventNetworkModel, onClick: () -> Unit) {
         Row(modifier = Modifier.height(110.dp)) {
             Box(modifier = Modifier.width(100.dp)) {
                 AsyncImage(
-                    model = "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&h=300&fit=crop&auto=format",
+                    model = event.coverImageUrl,
                     contentDescription = event.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -594,7 +594,7 @@ fun NearbyEventCard(event: EventNetworkModel, onClick: () -> Unit) {
                         modifier = Modifier.size(11.dp)
                     )
                     Text(
-                        text = event.startTimestamp,
+                        text = event.startTimestamp.toString(),
                         color = Color(0xFF737880),
                         fontSize = 12.sp
                     )

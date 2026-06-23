@@ -80,7 +80,8 @@ class CreateEventViewModel(
                     isFree = currentState.isFree,
                     price = currentState.price.toDoubleOrNull() ?: 0.0,
                     isSoloFriendly = currentState.isSoloFriendly,
-                    creatorId = ""
+                    creatorId = "",
+                    startTimestamp = currentState.date + currentState.time
                 )
 
                 createEventUseCase(

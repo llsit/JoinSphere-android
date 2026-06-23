@@ -1,5 +1,6 @@
 package com.llsit.joinsphere.core.data.repository
 
+import android.util.Log
 import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.model.DiscoverFeedsResponse
 import com.llsit.joinsphere.core.model.event.EventDto
@@ -9,7 +10,10 @@ import io.github.jan.supabase.functions.functions
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.storage.storage
 import io.ktor.client.call.body
-import io.ktor.client.request.parameter
+import io.ktor.client.statement.bodyAsText
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import timber.log.Timber
 
 class EventRepositoryImpl(
     private val supabase: SupabaseClient
@@ -37,12 +41,19 @@ class EventRepositoryImpl(
         userLng: Double,
         radiusMeters: Double
     ): Result<DiscoverFeedsResponse> = runCatching {
-        val response = supabase.functions.invoke("get-discover-feeds") {
-            parameter("lat", userLat)
-            parameter("lng", userLng)
-            parameter("radius", radiusMeters)
-        }
+        val response = supabase.functions.invoke(
+            "get-discover-feeds",
+            buildJsonObject {
+                put("user_lat", userLat)
+                put("user_lng", userLng)
+                put("radius_m", radiusMeters)
+            }
+        )
+        val text = response.bodyAsText()
 
+        Log.d("DISCOVER_JSON", text)
         response.body<DiscoverFeedsResponse>()
+    }.onFailure {
+        Timber.e(it, "Error getting discover feeds")
     }
 }

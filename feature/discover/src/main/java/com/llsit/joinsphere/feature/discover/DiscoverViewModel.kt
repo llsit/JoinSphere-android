@@ -18,6 +18,7 @@ sealed interface DiscoverUiState {
         val thisWeek: List<EventNetworkModel>,
         val address: String = "Bangkok"
     ) : DiscoverUiState
+
     data class Error(val message: String) : DiscoverUiState
 }
 
@@ -51,7 +52,8 @@ class DiscoverViewModel(
 
             getDiscoverFeedsUseCase(
                 lat = userLocation?.lat ?: 13.7563,
-                lng = userLocation?.lng ?: 100.5018
+                lng = userLocation?.lng ?: 100.5018,
+                radius = 2000.0
             )
                 .onSuccess { response ->
                     _uiState.update {

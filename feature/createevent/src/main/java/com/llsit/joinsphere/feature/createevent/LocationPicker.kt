@@ -115,6 +115,7 @@ fun LocationPickerDialog(
             coarseLocationPermission == PackageManager.PERMISSION_GRANTED
         ) {
             viewModel.getCurrentLocation { lat, lng ->
+                // Initial jump to current location
                 mapView.controller.setCenter(GeoPoint(lat, lng))
             }
         } else {
@@ -130,8 +131,24 @@ fun LocationPickerDialog(
     // Sync Map with ViewModel center changes (e.g. from Search or Current Location)
     LaunchedEffect(uiState.centerLatitude, uiState.centerLongitude) {
         val currentCenter = mapView.mapCenter
-        if (currentCenter.latitude != uiState.centerLatitude || currentCenter.longitude != uiState.centerLongitude) {
-            mapView.controller.animateTo(GeoPoint(uiState.centerLatitude, uiState.centerLongitude))
+        val epsilon = 0.00001
+        if (Math.abs(currentCenter.latitude - uiState.centerLatitude) > epsilon ||
+            Math.abs(currentCenter.longitude - uiState.centerLongitude) > epsilon
+        ) {
+            // Significant move (Search or Current Location) -> Animate
+            if (Math.abs(currentCenter.latitude - uiState.centerLatitude) > 0.001 ||
+                Math.abs(currentCenter.longitude - uiState.centerLongitude) > 0.001
+            ) {
+                mapView.controller.animateTo(
+                    GeoPoint(
+                        uiState.centerLatitude,
+                        uiState.centerLongitude
+                    )
+                )
+            } else {
+                // Small correction -> Jump
+                mapView.controller.setCenter(GeoPoint(uiState.centerLatitude, uiState.centerLongitude))
+            }
         }
     }
 

@@ -7,9 +7,9 @@ class GetDiscoverFeedsUseCase(
     private val eventRepository: EventRepository
 ) {
     suspend operator fun invoke(
-        lat: Double = 13.7563, // Bangkok default
-        lng: Double = 100.5018,
-        radius: Double = 20000.0
+        lat: Double,
+        lng: Double,
+        radius: Double
     ): Result<DiscoverFeedsResponse> {
         return eventRepository.getDiscoverFeeds(lat, lng, radius)
     }

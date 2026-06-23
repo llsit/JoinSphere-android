@@ -18,6 +18,7 @@ class SupabaseConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("supabase-auth").get())
                 add("implementation", libs.findLibrary("supabase-postgrest").get())
                 add("implementation", libs.findLibrary("supabase-storage").get())
+                add("implementation", libs.findLibrary("supabase-functions").get())
                 add("implementation", libs.findLibrary("ktor-client-okhttp").get())
             }
         }
