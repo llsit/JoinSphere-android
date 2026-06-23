@@ -3,7 +3,6 @@ package com.llsit.joinsphere.feature.createevent
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.location.Geocoder
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -39,10 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -59,12 +55,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.tasks.CancellationTokenSource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.llsit.joinsphere.core.model.event.SelectedPlace
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.llsit.joinsphere.feature.createevent.state.LocationPickerIntent
+import org.koin.androidx.compose.koinViewModel
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.DelayedMapListener
 import org.osmdroid.events.MapListener
@@ -73,19 +67,17 @@ import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
-import java.util.Locale
 
 @SuppressLint("MissingPermission")
 @Composable
 fun LocationPickerDialog(
     onDismiss: () -> Unit,
-    onLocationSelected: (SelectedPlace) -> Unit
+    onLocationSelected: (SelectedPlace) -> Unit,
+    viewModel: LocationPickerViewModel = koinViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
-
-    val bangkok = remember { GeoPoint(13.7563, 100.5018) }
 
     val mapView = remember {
         Configuration.getInstance().userAgentValue = context.packageName
@@ -93,17 +85,9 @@ fun LocationPickerDialog(
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             controller.setZoom(15.0)
-            controller.setCenter(bangkok)
+            controller.setCenter(GeoPoint(uiState.centerLatitude, uiState.centerLongitude))
         }
     }
-
-    var selectedPlace by remember { mutableStateOf<SelectedPlace>(SelectedPlace()) }
-    var isResolvingAddress by remember { mutableStateOf(false) }
-    var currentCenter by remember { mutableStateOf(bangkok) }
-    var searchQuery by remember { mutableStateOf("") }
-    var isSearching by remember { mutableStateOf(false) }
-
-    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -111,16 +95,8 @@ fun LocationPickerDialog(
         if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
             permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         ) {
-            scope.launch {
-                val priority = com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY
-                fusedLocationClient.getCurrentLocation(priority, CancellationTokenSource().token)
-                    .addOnSuccessListener { location ->
-                        if (location != null) {
-                            val userPoint = GeoPoint(location.latitude, location.longitude)
-                            mapView.controller.animateTo(userPoint)
-                            currentCenter = userPoint
-                        }
-                    }
+            viewModel.getCurrentLocation { lat, lng ->
+                mapView.controller.animateTo(GeoPoint(lat, lng))
             }
         }
     }
@@ -138,15 +114,9 @@ fun LocationPickerDialog(
         if (fineLocationPermission == PackageManager.PERMISSION_GRANTED ||
             coarseLocationPermission == PackageManager.PERMISSION_GRANTED
         ) {
-            val priority = com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY
-            fusedLocationClient.getCurrentLocation(priority, CancellationTokenSource().token)
-                .addOnSuccessListener { location ->
-                    if (location != null) {
-                        val userPoint = GeoPoint(location.latitude, location.longitude)
-                        mapView.controller.setCenter(userPoint)
-                        currentCenter = userPoint
-                    }
-                }
+            viewModel.getCurrentLocation { lat, lng ->
+                mapView.controller.setCenter(GeoPoint(lat, lng))
+            }
         } else {
             permissionLauncher.launch(
                 arrayOf(
@@ -154,6 +124,14 @@ fun LocationPickerDialog(
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 )
             )
+        }
+    }
+
+    // Sync Map with ViewModel center changes (e.g. from Search or Current Location)
+    LaunchedEffect(uiState.centerLatitude, uiState.centerLongitude) {
+        val currentCenter = mapView.mapCenter
+        if (currentCenter.latitude != uiState.centerLatitude || currentCenter.longitude != uiState.centerLongitude) {
+            mapView.controller.animateTo(GeoPoint(uiState.centerLatitude, uiState.centerLongitude))
         }
     }
 
@@ -177,79 +155,17 @@ fun LocationPickerDialog(
     LaunchedEffect(mapView) {
         mapView.addMapListener(DelayedMapListener(object : MapListener {
             override fun onScroll(event: ScrollEvent?): Boolean {
-                currentCenter = mapView.mapCenter as GeoPoint
+                val center = mapView.mapCenter
+                viewModel.processIntent(LocationPickerIntent.UpdateCenter(center.latitude, center.longitude))
                 return true
             }
 
             override fun onZoom(event: ZoomEvent?): Boolean {
-                currentCenter = mapView.mapCenter as GeoPoint
+                val center = mapView.mapCenter
+                viewModel.processIntent(LocationPickerIntent.UpdateCenter(center.latitude, center.longitude))
                 return true
             }
         }, 500))
-    }
-
-    LaunchedEffect(currentCenter) {
-        isResolvingAddress = true
-        withContext(Dispatchers.IO) {
-            try {
-                val geocoder = Geocoder(context, Locale.getDefault())
-                val addresses =
-                    geocoder.getFromLocation(currentCenter.latitude, currentCenter.longitude, 1)
-                if (!addresses.isNullOrEmpty()) {
-                    val address = addresses[0]
-                    val addressLine = address.getAddressLine(0)
-                        ?: "${currentCenter.latitude}, ${currentCenter.longitude}"
-                    selectedPlace = selectedPlace.copy(
-                        name = address.featureName ?: address.thoroughfare ?: addressLine,
-                        address = addressLine,
-                        latitude = currentCenter.latitude,
-                        longitude = currentCenter.longitude
-                    )
-                } else {
-                    selectedPlace = selectedPlace.copy(
-                        name = "${currentCenter.latitude}, ${currentCenter.longitude}",
-                        address = "${currentCenter.latitude}, ${currentCenter.longitude}",
-                        latitude = currentCenter.latitude,
-                        longitude = currentCenter.longitude
-                    )
-                }
-            } catch (e: Exception) {
-                selectedPlace = selectedPlace.copy(
-                    name = "${currentCenter.latitude}, ${currentCenter.longitude}",
-                    address = "${currentCenter.latitude}, ${currentCenter.longitude}",
-                    latitude = currentCenter.latitude,
-                    longitude = currentCenter.longitude
-                )
-            } finally {
-                isResolvingAddress = false
-            }
-        }
-    }
-
-    fun searchLocation(query: String) {
-        if (query.isBlank()) return
-        isSearching = true
-        scope.launch(Dispatchers.IO) {
-            try {
-                val geocoder = Geocoder(context, Locale.getDefault())
-                val addresses = geocoder.getFromLocationName(query, 1)
-                if (!addresses.isNullOrEmpty()) {
-                    val address = addresses[0]
-                    val targetPoint = GeoPoint(address.latitude, address.longitude)
-                    withContext(Dispatchers.Main) {
-                        mapView.controller.animateTo(targetPoint)
-                        currentCenter = targetPoint
-                        focusManager.clearFocus()
-                    }
-                }
-            } catch (e: Exception) {
-                // Handle error
-            } finally {
-                withContext(Dispatchers.Main) {
-                    isSearching = false
-                }
-            }
-        }
     }
 
     Dialog(
@@ -283,13 +199,13 @@ fun LocationPickerDialog(
                         shadowElevation = 4.dp
                     ) {
                         OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
+                            value = uiState.searchQuery,
+                            onValueChange = { viewModel.processIntent(LocationPickerIntent.UpdateSearchQuery(it)) },
                             placeholder = { Text("ค้นหาสถานที่...") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             leadingIcon = {
-                                if (isSearching) {
+                                if (uiState.isSearching) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(18.dp),
                                         strokeWidth = 2.dp
@@ -299,8 +215,8 @@ fun LocationPickerDialog(
                                 }
                             },
                             trailingIcon = {
-                                if (searchQuery.isNotEmpty()) {
-                                    IconButton(onClick = { searchQuery = "" }) {
+                                if (uiState.searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { viewModel.processIntent(LocationPickerIntent.UpdateSearchQuery("")) }) {
                                         Icon(
                                             Icons.Default.Close,
                                             contentDescription = null,
@@ -311,9 +227,8 @@ fun LocationPickerDialog(
                             },
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                             keyboardActions = KeyboardActions(onSearch = {
-                                searchLocation(
-                                    searchQuery
-                                )
+                                viewModel.processIntent(LocationPickerIntent.SearchLocation(uiState.searchQuery))
+                                focusManager.clearFocus()
                             }),
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -351,18 +266,9 @@ fun LocationPickerDialog(
             // Current Location Button
             IconButton(
                 onClick = {
-                    val priority = com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY
-                    fusedLocationClient.getCurrentLocation(
-                        priority,
-                        CancellationTokenSource().token
-                    )
-                        .addOnSuccessListener { location ->
-                            if (location != null) {
-                                val userPoint = GeoPoint(location.latitude, location.longitude)
-                                mapView.controller.animateTo(userPoint)
-                                currentCenter = userPoint
-                            }
-                        }
+                    viewModel.getCurrentLocation { lat, lng ->
+                        mapView.controller.animateTo(GeoPoint(lat, lng))
+                    }
                 },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -397,7 +303,7 @@ fun LocationPickerDialog(
                         .fillMaxWidth()
                         .padding(vertical = 12.dp)
                 ) {
-                    if (isResolvingAddress) {
+                    if (uiState.isResolvingAddress) {
                         CircularProgressIndicator(
                             modifier = Modifier
                                 .size(24.dp)
@@ -407,7 +313,7 @@ fun LocationPickerDialog(
                         )
                     } else {
                         Text(
-                            text = selectedPlace.address,
+                            text = uiState.selectedPlace.address,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = Color(0xFF0D0F14)
@@ -416,7 +322,7 @@ fun LocationPickerDialog(
                 }
                 Button(
                     onClick = {
-                        onLocationSelected(selectedPlace)
+                        onLocationSelected(uiState.selectedPlace)
                         onDismiss()
                     },
                     modifier = Modifier
@@ -424,7 +330,7 @@ fun LocationPickerDialog(
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1757F0)),
-                    enabled = !isResolvingAddress
+                    enabled = !uiState.isResolvingAddress
                 ) {
                     Text("ยืนยันตำแหน่ง", fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }

@@ -483,8 +483,7 @@ fun Step1(
             if (imageUri != null) {
                 Box {
                     AsyncImage(
-                        model = imageUri
-                            ?: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600&h=280&fit=crop&auto=format",
+                        model = imageUri,
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop

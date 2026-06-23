@@ -1,6 +1,7 @@
 package com.llsit.joinsphere.core.data.di
 
 import android.content.Context
+import android.location.Geocoder
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.android.gms.location.LocationServices
 import com.llsit.joinsphere.core.data.local.PreferencesDataSource
@@ -23,6 +24,7 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.storage.Storage
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
+import java.util.Locale
 
 private val Context.dataStore by preferencesDataStore(name = "joinsphere_preferences")
 
@@ -44,6 +46,7 @@ val dataModule = module {
     single { PreferencesDataSource(get()) }
     single<SessionManager> { SupabaseSessionManager(get()) }
     single { LocationServices.getFusedLocationProviderClient(androidContext()) }
+    single { Geocoder(androidContext(), Locale.getDefault()) }
     single<LocationRepository> { LocationRepositoryImpl(androidContext(), get()) }
     single<UserDataRepository> { OfflineUserDataRepository(get(), get()) }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
