@@ -4,9 +4,8 @@ import android.content.Context
 import android.net.Uri
 import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.domain.repository.UserDataRepository
-import com.llsit.joinsphere.core.model.EventDto
+import com.llsit.joinsphere.core.model.event.EventDto
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
@@ -18,7 +17,7 @@ class CreateEventUseCase(
     suspend operator fun invoke(eventData: EventDto, localImageUri: Uri?): Result<Unit> =
         runCatching {
             val currentUserId =
-                userDataRepository.authToken.first() ?: throw Exception("ไม่พบสิทธิ์ผู้ใช้งาน")
+                userDataRepository.currentUserId ?: throw Exception("ไม่พบสิทธิ์ผู้ใช้งาน")
 
             val eventId = UUID.randomUUID().toString()
 

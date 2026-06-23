@@ -10,20 +10,10 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
-import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.util.Calendar
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -78,11 +68,22 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.llsit.joinsphere.core.model.event.SelectedPlace
 import com.llsit.joinsphere.feature.createevent.state.CreateEventIntent
 import com.llsit.joinsphere.feature.createevent.state.CreateEventUiEffect
 import org.koin.androidx.compose.koinViewModel
+import java.io.File
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 data class Category(val id: String, val label: String, val emoji: String)
 
@@ -137,7 +138,11 @@ fun CreateEventScreen(
         if (isGranted) {
             viewModel.dispatchCameraEffect()
         } else {
-            Toast.makeText(context, "Camera permission is required to take photos", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                "Camera permission is required to take photos",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -150,6 +155,7 @@ fun CreateEventScreen(
                     tempPhotoUri = uri
                     cameraLauncher.launch(uri)
                 }
+
                 is CreateEventUiEffect.OpenMap -> showMap = true
                 is CreateEventUiEffect.ShowToast -> {
                     Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
@@ -190,7 +196,7 @@ fun CreateEventScreen(
     if (uiState.isSubmitted) {
         SuccessScreen(
             onReset = { viewModel.processIntent(CreateEventIntent.ResetForm) },
-            location = uiState.location
+            location = uiState.selectedPlace.address
         )
     } else {
         Column(
@@ -258,13 +264,9 @@ fun CreateEventScreen(
                             onDateChange = { viewModel.processIntent(CreateEventIntent.UpdateDate(it)) },
                             time = uiState.time,
                             onTimeChange = { viewModel.processIntent(CreateEventIntent.UpdateTime(it)) },
-                            location = uiState.location,
+                            location = uiState.selectedPlace,
                             onLocationChange = {
-                                viewModel.processIntent(
-                                    CreateEventIntent.UpdateLocation(
-                                        it
-                                    )
-                                )
+
                             },
                             onLocationClick = { viewModel.dispatchMapEffect() },
                             maxAttendees = uiState.maxAttendees,
@@ -299,7 +301,7 @@ fun CreateEventScreen(
                             description = uiState.description,
                             date = uiState.date,
                             time = uiState.time,
-                            location = uiState.location,
+                            location = uiState.selectedPlace.address,
                             maxAttendees = uiState.maxAttendees,
                             isFree = uiState.isFree,
                             price = uiState.price,
@@ -481,7 +483,8 @@ fun Step1(
             if (imageUri != null) {
                 Box {
                     AsyncImage(
-                        model = imageUri ?: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600&h=280&fit=crop&auto=format",
+                        model = imageUri
+                            ?: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600&h=280&fit=crop&auto=format",
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -681,7 +684,7 @@ fun Step1(
 fun Step2(
     date: String, onDateChange: (String) -> Unit,
     time: String, onTimeChange: (String) -> Unit,
-    location: String, onLocationChange: (String) -> Unit,
+    location: SelectedPlace, onLocationChange: (String) -> Unit,
     onLocationClick: () -> Unit,
     maxAttendees: String, onMaxAttendeesChange: (String) -> Unit,
     isFree: Boolean, onIsFreeChange: (Boolean) -> Unit,
@@ -741,7 +744,7 @@ fun Step2(
         FormField(label = "Location") {
             Box(modifier = Modifier.clickable { onLocationClick() }) {
                 CustomCreateTextField(
-                    value = location,
+                    value = location.address,
                     onValueChange = onLocationChange,
                     placeholder = "Address or venue name",
                     leadingIcon = Icons.Default.Place,

@@ -1,4 +1,4 @@
-package com.llsit.joinsphere.core.model
+package com.llsit.joinsphere.core.model.event
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -19,8 +19,12 @@ data class EventDto(
     val date: String,
     @SerialName("time")
     val time: String,
-    @SerialName("location")
-    val location: String? = "",
+    @SerialName("address")
+    val address: String,
+    @SerialName("latitude")
+    val latitude: Double,
+    @SerialName("longitude")
+    val longitude: Double,
     @SerialName("max_attendees")
     val maxAttendees: Int? = null,
     @SerialName("is_free")

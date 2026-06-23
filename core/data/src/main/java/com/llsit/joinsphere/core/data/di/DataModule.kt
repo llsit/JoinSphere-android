@@ -45,8 +45,8 @@ val dataModule = module {
     single<SessionManager> { SupabaseSessionManager(get()) }
     single { LocationServices.getFusedLocationProviderClient(androidContext()) }
     single<LocationRepository> { LocationRepositoryImpl(androidContext(), get()) }
-    single<UserDataRepository> { OfflineUserDataRepository(get()) }
+    single<UserDataRepository> { OfflineUserDataRepository(get(), get()) }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
-    single<ProfileRepository> { ProfileRepositoryImpl(get(), get()) }
+    single<ProfileRepository> { ProfileRepositoryImpl(get()) }
     single<EventRepository> { EventRepositoryImpl(get()) }
 }

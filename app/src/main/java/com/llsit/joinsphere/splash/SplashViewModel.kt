@@ -44,7 +44,7 @@ class SplashViewModel(
     fun checkNavigationDestination() {
         viewModelScope.launch {
             val shouldShowOnboarding = preferencesDataSource.shouldShowOnboarding.first()
-            val token = preferencesDataSource.authToken.first()
+            val token = preferencesDataSource.sessionDataValue()
 
             val destination = when {
                 shouldShowOnboarding -> SplashDestination.ONBOARDING

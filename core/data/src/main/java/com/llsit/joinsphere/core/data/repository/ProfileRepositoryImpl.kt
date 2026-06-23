@@ -4,18 +4,14 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.storage.storage
-import com.llsit.joinsphere.core.data.local.PreferencesDataSource
 import com.llsit.joinsphere.core.domain.repository.ProfileRepository
 import com.llsit.joinsphere.core.model.UserProfileDto
-import kotlinx.coroutines.flow.first
 
 class ProfileRepositoryImpl(
-    private val supabase: SupabaseClient,
-    private val pref: PreferencesDataSource
+    private val supabase: SupabaseClient
 ) : ProfileRepository {
     override suspend fun getUserProfile(): Result<UserProfileDto> = runCatching {
         val userId = supabase.auth.currentUserOrNull()?.id
-            ?: pref.authToken.first()
             ?: throw Exception("ไม่พบข้อมูลผู้ใช้")
         
         supabase.postgrest["users"]
@@ -29,7 +25,6 @@ class ProfileRepositoryImpl(
 
     override suspend fun updateImageProfile(imageByteArray: ByteArray): Result<String> = runCatching {
         val userId = supabase.auth.currentUserOrNull()?.id
-            ?: pref.authToken.first()
             ?: throw Exception("ไม่พบข้อมูลผู้ใช้")
         val bucket = supabase.storage["profile_images"]
         val fileName = "$userId.jpg"

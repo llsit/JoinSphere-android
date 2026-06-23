@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.llsit.joinsphere.core.domain.usecase.CreateEventUseCase
-import com.llsit.joinsphere.core.model.EventDto
+import com.llsit.joinsphere.core.model.event.EventDto
 import com.llsit.joinsphere.feature.createevent.state.CreateEventIntent
 import com.llsit.joinsphere.feature.createevent.state.CreateEventUiEffect
 import com.llsit.joinsphere.feature.createevent.state.CreateEventUiState
@@ -48,7 +48,7 @@ class CreateEventViewModel(
             is CreateEventIntent.ImageSelected -> _uiState.update { it.copy(localImageUri = intent.uri) }
             is CreateEventIntent.UpdateDate -> _uiState.update { it.copy(date = intent.date) }
             is CreateEventIntent.UpdateTime -> _uiState.update { it.copy(time = intent.time) }
-            is CreateEventIntent.UpdateLocation -> _uiState.update { it.copy(location = intent.location) }
+            is CreateEventIntent.UpdateLocation -> _uiState.update { it.copy(selectedPlace = intent.selectedPlace) }
             is CreateEventIntent.UpdateMaxAttendees -> _uiState.update { it.copy(maxAttendees = intent.maxAttendees) }
             is CreateEventIntent.UpdateIsFree -> _uiState.update { it.copy(isFree = intent.isFree) }
             is CreateEventIntent.UpdatePrice -> _uiState.update { it.copy(price = intent.price) }
@@ -73,12 +73,14 @@ class CreateEventViewModel(
                     description = currentState.description,
                     date = currentState.date,
                     time = currentState.time,
-                    location = currentState.location,
+                    address = currentState.selectedPlace.address,
+                    latitude = currentState.selectedPlace.latitude,
+                    longitude = currentState.selectedPlace.longitude,
                     maxAttendees = currentState.maxAttendees.toIntOrNull(),
                     isFree = currentState.isFree,
                     price = currentState.price.toDoubleOrNull() ?: 0.0,
                     isSoloFriendly = currentState.isSoloFriendly,
-                    creatorId = "" // This will be set in the UseCase
+                    creatorId = ""
                 )
 
                 createEventUseCase(

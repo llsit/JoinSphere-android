@@ -2,7 +2,6 @@ package com.llsit.joinsphere.feature.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.llsit.joinsphere.core.domain.repository.UserDataRepository
 import com.llsit.joinsphere.core.domain.usecase.LoginUseCase
 import com.llsit.joinsphere.core.domain.usecase.LogoutUseCase
 import com.llsit.joinsphere.core.domain.usecase.RegisterUseCase
@@ -16,7 +15,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val userDataRepository: UserDataRepository,
     private val loginUseCase: LoginUseCase,
     private val registerUseCase: RegisterUseCase,
     private val logoutUseCase: LogoutUseCase

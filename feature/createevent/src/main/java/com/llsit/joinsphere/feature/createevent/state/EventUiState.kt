@@ -1,5 +1,6 @@
 package com.llsit.joinsphere.feature.createevent.state
 
+import com.llsit.joinsphere.core.model.event.SelectedPlace
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -15,7 +16,7 @@ data class CreateEventUiState(
     val description: String = "",
     val date: String = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
     val time: String = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
-    val location: String = "mock location",
+    val selectedPlace: SelectedPlace = SelectedPlace(),
     val maxAttendees: String = "",
     val isFree: Boolean = true,
     val price: String = "",
@@ -24,7 +25,7 @@ data class CreateEventUiState(
 ) {
     val isStep1Complete: Boolean get() = title.trim().length > 3 && categoryId.isNotEmpty()
     val isStep2Complete: Boolean
-        get() = date.isNotEmpty() && time.isNotEmpty() && location.trim().isNotEmpty()
+        get() = date.isNotEmpty() && time.isNotEmpty() && selectedPlace.address.trim().isNotEmpty()
 
     val isNextButtonEnabled: Boolean
         get() = when (currentStep) {
@@ -49,7 +50,7 @@ sealed interface CreateEventIntent {
 
     data class UpdateDate(val date: String) : CreateEventIntent
     data class UpdateTime(val time: String) : CreateEventIntent
-    data class UpdateLocation(val location: String) : CreateEventIntent
+    data class UpdateLocation(val selectedPlace: SelectedPlace) : CreateEventIntent
     data class UpdateMaxAttendees(val maxAttendees: String) : CreateEventIntent
     data class UpdateIsFree(val isFree: Boolean) : CreateEventIntent
     data class UpdatePrice(val price: String) : CreateEventIntent

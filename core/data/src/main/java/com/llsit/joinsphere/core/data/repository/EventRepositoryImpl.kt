@@ -2,7 +2,7 @@ package com.llsit.joinsphere.core.data.repository
 
 import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.model.DiscoverFeedsResponse
-import com.llsit.joinsphere.core.model.EventDto
+import com.llsit.joinsphere.core.model.event.EventDto
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.functions.functions

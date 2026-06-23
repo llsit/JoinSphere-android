@@ -18,7 +18,6 @@ class PreferencesDataSource(
 ) {
     private object PreferencesKeys {
         val SHOULD_SHOW_ONBOARDING = booleanPreferencesKey("should_show_onboarding")
-        val AUTH_TOKEN = stringPreferencesKey("auth_token")
         val SESSION_DATA = stringPreferencesKey("session_data")
     }
 
@@ -37,23 +36,6 @@ class PreferencesDataSource(
     suspend fun setShouldShowOnboarding(shouldShow: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.SHOULD_SHOW_ONBOARDING] = shouldShow
-        }
-    }
-
-    val authToken: Flow<String?> = dataStore.data
-        .map { preferences ->
-            preferences[PreferencesKeys.AUTH_TOKEN]
-        }
-
-    suspend fun authTokenValue(): String? = authToken.firstOrNull()
-
-    suspend fun setAuthToken(token: String?) {
-        dataStore.edit { preferences ->
-            if (token == null) {
-                preferences.minusAssign(PreferencesKeys.AUTH_TOKEN)
-            } else {
-                preferences[PreferencesKeys.AUTH_TOKEN] = token
-            }
         }
     }
 
