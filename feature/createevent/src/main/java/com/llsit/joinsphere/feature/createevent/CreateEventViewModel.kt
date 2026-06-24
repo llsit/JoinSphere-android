@@ -18,6 +18,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 class CreateEventViewModel(
     private val createEventUseCase: CreateEventUseCase,
@@ -89,6 +94,10 @@ class CreateEventViewModel(
             _uiState.update { it.copy(isLoading = true) }
 
             try {
+                val localDate = LocalDate.parse(currentState.date)
+                val localTime = LocalTime.parse(currentState.time)
+                val zonedDateTime = ZonedDateTime.of(localDate, localTime, ZoneId.systemDefault())
+
                 val eventDto = EventDto(
                     title = currentState.title,
                     categoryId = currentState.categoryId,
@@ -103,7 +112,7 @@ class CreateEventViewModel(
                     price = currentState.price.toDoubleOrNull() ?: 0.0,
                     isSoloFriendly = currentState.isSoloFriendly,
                     creatorId = "",
-                    startTimestamp = currentState.date + currentState.time
+                    startTimestamp = zonedDateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                 )
 
                 createEventUseCase(

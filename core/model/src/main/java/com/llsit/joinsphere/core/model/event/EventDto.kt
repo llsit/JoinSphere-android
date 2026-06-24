@@ -39,5 +39,6 @@ data class EventDto(
     val createdAt: Long? = null,
     @SerialName("attendee_count")
     val attendeeCount: Int? = 1,
+    @SerialName("start_timestamp")
     val startTimestamp: String
 )
