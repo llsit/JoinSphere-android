@@ -56,133 +56,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import com.llsit.joinsphere.core.design.Card
+import com.llsit.joinsphere.core.model.Category
 import com.llsit.joinsphere.core.model.EventNetworkModel
 import org.koin.androidx.compose.koinViewModel
-
-data class Category(val id: String, val label: String)
-data class Event(
-    val id: Int,
-    val title: String,
-    val category: String,
-    val image: String,
-    val date: String,
-    val time: String,
-    val location: String,
-    val attendees: Int,
-    val maxAttendees: Int? = null,
-    val rating: Float,
-    val reviews: Int? = null,
-    val price: String,
-    val soloPercent: Int,
-    val hostVerified: Boolean,
-    val hostName: String? = null,
-    val hostAvatar: String? = null,
-    val avatars: List<String> = emptyList()
-)
-
-val CATEGORIES = listOf(
-    Category("all", "All"),
-    Category("sports", "Sports"),
-    Category("music", "Music"),
-    Category("food", "Food & Drink"),
-    Category("arts", "Arts"),
-    Category("outdoors", "Outdoors"),
-    Category("tech", "Tech")
-)
-
-val FEATURED = listOf(
-    Event(
-        id = 1,
-        title = "Golden Gate Morning Run",
-        category = "Sports",
-        image = "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=700&h=460&fit=crop&auto=format",
-        date = "Sat, Jun 14",
-        time = "7:00 AM",
-        location = "Golden Gate Park",
-        attendees = 34,
-        maxAttendees = 50,
-        rating = 4.9f,
-        reviews = 127,
-        price = "Free",
-        soloPercent = 71,
-        hostVerified = true,
-        hostName = "Sarah C.",
-        hostAvatar = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&auto=format",
-        avatars = listOf(
-            "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=60&h=60&fit=crop&auto=format",
-            "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=60&h=60&fit=crop&auto=format",
-            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=60&h=60&fit=crop&auto=format"
-        )
-    ),
-    Event(
-        id = 2,
-        title = "Rooftop Jazz & Wine Night",
-        category = "Music",
-        image = "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=700&h=460&fit=crop&auto=format",
-        date = "Fri, Jun 13",
-        time = "7:30 PM",
-        location = "SoMa Rooftop",
-        attendees = 82,
-        maxAttendees = 100,
-        rating = 4.8f,
-        reviews = 94,
-        price = "$25",
-        soloPercent = 58,
-        hostVerified = true,
-        hostName = "Marcus W.",
-        hostAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=60&h=60&fit=crop&auto=format",
-        avatars = listOf(
-            "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=60&h=60&fit=crop&auto=format",
-            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=60&h=60&fit=crop&auto=format",
-            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=60&h=60&fit=crop&auto=format"
-        )
-    )
-)
-
-val NEARBY = listOf(
-    Event(
-        id = 3,
-        title = "Sunday Farmers Market",
-        category = "Food & Drink",
-        date = "Sun, Jun 15",
-        time = "9:00 AM",
-        location = "Ferry Building",
-        attendees = 150,
-        price = "Free",
-        soloPercent = 82,
-        rating = 4.7f,
-        image = "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400&h=300&fit=crop&auto=format",
-        hostVerified = true
-    ),
-    Event(
-        id = 4,
-        title = "Pottery Workshop",
-        category = "Arts",
-        date = "Thu, Jun 19",
-        time = "2:00 PM",
-        location = "Mission Arts Center",
-        attendees = 12,
-        price = "$45",
-        soloPercent = 90,
-        rating = 5.0f,
-        image = "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=400&h=300&fit=crop&auto=format",
-        hostVerified = true
-    ),
-    Event(
-        id = 5,
-        title = "Sunset Yoga on the Beach",
-        category = "Outdoors",
-        date = "Wed, Jun 18",
-        time = "5:30 PM",
-        location = "Ocean Beach",
-        attendees = 28,
-        price = "$10",
-        soloPercent = 76,
-        rating = 4.9f,
-        image = "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=300&fit=crop&auto=format",
-        hostVerified = false
-    )
-)
 
 @Composable
 fun DiscoverScreen(
@@ -217,10 +93,7 @@ fun DiscoverScreen(
             ) {
                 Column {
                     Text(
-                        text = when (val state = uiState) {
-                            is DiscoverUiState.Success -> state.address
-                            else -> "ดึงข้อมูลตำแหน่ง..."
-                        },
+                        text = uiState.address,
                         color = Color(0xFF737880),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
@@ -291,76 +164,90 @@ fun DiscoverScreen(
         }
 
         // Category chips
+        val categories = remember(uiState.categories) {
+            listOf(Category("all", "All", "🌎")) + uiState.categories
+        }
+
         LazyRow(
             contentPadding = PaddingValues(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
-            items(CATEGORIES) { cat ->
+            items(categories) { cat ->
                 val active = activeCategory == cat.id
                 Surface(
                     onClick = { activeCategory = cat.id },
                     color = if (active) Color(0xFF0D0F14) else Color(0xFFF4F5F8),
                     shape = RoundedCornerShape(20.dp)
                 ) {
-                    Text(
-                        text = cat.label,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (active) Color.White else Color(0xFF737880)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        if (cat.id != "all") {
+                            Text(text = cat.emoji, modifier = Modifier.padding(end = 4.dp))
+                        }
+                        Text(
+                            text = cat.label,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (active) Color.White else Color(0xFF737880)
+                        )
+                    }
                 }
             }
         }
 
-        when (val state = uiState) {
-            is DiscoverUiState.Loading -> {
-                Box(
+        if (uiState.isLoading && uiState.trending.isEmpty() && uiState.thisWeek.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFF1757F0))
+            }
+        } else if (uiState.error != null && uiState.trending.isEmpty() && uiState.thisWeek.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = uiState.error ?: "Unknown error", color = Color.Red, textAlign = TextAlign.Center)
+            }
+        } else {
+            // Featured events section
+            Column(modifier = Modifier.padding(bottom = 24.dp)) {
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp),
-                    contentAlignment = Alignment.Center
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    CircularProgressIndicator(color = Color(0xFF1757F0))
+                    Text(
+                        text = "Trending near you",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.3).sp
+                    )
                 }
-            }
 
-            is DiscoverUiState.Error -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = state.message, color = Color.Red, textAlign = TextAlign.Center)
-                }
-            }
-
-            is DiscoverUiState.Success -> {
-                // Featured events section
-                Column(modifier = Modifier.padding(bottom = 24.dp)) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 14.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Trending near you",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.3).sp
-                        )
-                    }
-
+                if (uiState.trending.isEmpty()) {
+                    Text(
+                        text = "No trending events found nearby.",
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                } else {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 20.dp),
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                         modifier = Modifier.padding(bottom = 4.dp)
                     ) {
-                        items(state.trending) { ev ->
+                        items(uiState.trending) { ev ->
                             FeaturedEventCard(
                                 event = ev,
                                 isLiked = liked.contains(ev.id),
@@ -372,26 +259,35 @@ fun DiscoverScreen(
                         }
                     }
                 }
+            }
 
-                // Nearby this week section
-                Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 24.dp)) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 14.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "This week",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.3).sp
-                        )
-                    }
+            // Nearby this week section
+            Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 24.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "This week",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.3).sp
+                    )
+                }
 
+                if (uiState.thisWeek.isEmpty()) {
+                    Text(
+                        text = "No events found for this week.",
+                        modifier = Modifier.padding(bottom = 14.dp),
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                } else {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        state.thisWeek.forEach { ev ->
+                        uiState.thisWeek.forEach { ev ->
                             NearbyEventCard(
                                 event = ev,
                                 onClick = { onEventClick(ev.id) }
@@ -618,26 +514,6 @@ fun NearbyEventCard(event: EventNetworkModel, onClick: () -> Unit) {
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun AvatarStack(avatars: List<String>, size: Int = 28) {
-    Box(contentAlignment = Alignment.CenterStart) {
-        avatars.forEachIndexed { index, src ->
-            AsyncImage(
-                model = src,
-                contentDescription = null,
-                modifier = Modifier
-                    .offset(x = (index * (size * 0.7f)).dp)
-                    .size(size.dp)
-                    .zIndex((avatars.size - index).toFloat())
-                    .clip(CircleShape)
-                    .border(2.dp, Color.White, CircleShape)
-                    .background(Color(0xFFF4F5F8)),
-                contentScale = ContentScale.Crop
-            )
         }
     }
 }

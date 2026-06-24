@@ -2,6 +2,7 @@ package com.llsit.joinsphere
 
 import android.app.Application
 import com.llsit.joinsphere.core.data.di.dataModule
+import com.llsit.joinsphere.core.database.di.databaseModule
 import com.llsit.joinsphere.core.domain.di.domainModule
 import com.llsit.joinsphere.di.appModule
 import com.llsit.joinsphere.feature.auth.di.authModule
@@ -28,6 +29,7 @@ class JoinSphereApplication : Application() {
             modules(
                 appModule,
                 dataModule,
+                databaseModule,
                 domainModule,
                 authModule,
                 onboardingModule,

@@ -43,6 +43,14 @@ val dataModule = module {
             install(Storage)
         }
     }
+    // Add a custom Json instance for general use if needed, 
+    // though Supabase-kt usually handles this internally.
+    single {
+        kotlinx.serialization.json.Json {
+            ignoreUnknownKeys = true
+            coerceInputValues = true
+        }
+    }
     single { PreferencesDataSource(get()) }
     single<SessionManager> { SupabaseSessionManager(get()) }
     single { LocationServices.getFusedLocationProviderClient(androidContext()) }
@@ -51,5 +59,5 @@ val dataModule = module {
     single<UserDataRepository> { OfflineUserDataRepository(get(), get()) }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
     single<ProfileRepository> { ProfileRepositoryImpl(get()) }
-    single<EventRepository> { EventRepositoryImpl(get()) }
+    single<EventRepository> { EventRepositoryImpl(get(), get()) }
 }

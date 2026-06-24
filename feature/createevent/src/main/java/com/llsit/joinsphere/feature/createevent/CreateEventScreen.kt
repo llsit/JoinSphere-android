@@ -72,6 +72,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.llsit.joinsphere.core.model.Category
 import com.llsit.joinsphere.core.model.event.SelectedPlace
 import com.llsit.joinsphere.feature.createevent.state.CreateEventIntent
 import com.llsit.joinsphere.feature.createevent.state.CreateEventUiEffect
@@ -84,19 +85,6 @@ import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-
-data class Category(val id: String, val label: String, val emoji: String)
-
-val CATEGORIES = listOf(
-    Category("sports", "Sports", "🏃"),
-    Category("music", "Music", "🎵"),
-    Category("food", "Food", "🍽️"),
-    Category("arts", "Arts", "🎨"),
-    Category("outdoors", "Outdoors", "🌲"),
-    Category("tech", "Tech", "💻"),
-    Category("social", "Social", "🤝"),
-    Category("wellness", "Wellness", "🧘")
-)
 
 @Composable
 fun CreateEventScreen(
@@ -232,6 +220,7 @@ fun CreateEventScreen(
                                 )
                             },
                             category = uiState.categoryId,
+                            categories = uiState.categories,
                             onCategoryChange = {
                                 viewModel.processIntent(
                                     CreateEventIntent.UpdateCategory(
@@ -298,6 +287,7 @@ fun CreateEventScreen(
                         3 -> Step3(
                             title = uiState.title,
                             category = uiState.categoryId,
+                            categories = uiState.categories,
                             description = uiState.description,
                             date = uiState.date,
                             time = uiState.time,
@@ -465,7 +455,8 @@ fun ProgressBar(step: Int) {
 @Composable
 fun Step1(
     title: String, onTitleChange: (String) -> Unit,
-    category: String, onCategoryChange: (String) -> Unit,
+    category: String, categories: List<Category>,
+    onCategoryChange: (String) -> Unit,
     description: String, onDescriptionChange: (String) -> Unit,
     soloFriendly: Boolean, onSoloFriendlyChange: (Boolean) -> Unit,
     imageUri: Uri?, onImageClick: () -> Unit
@@ -569,7 +560,7 @@ fun Step1(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 10.dp)
             )
-            val chunkedCategories = remember { CATEGORIES.chunked(4) }
+            val chunkedCategories = remember(categories) { categories.chunked(4) }
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     chunkedCategories.forEach { rowCategories ->
@@ -808,6 +799,7 @@ fun Step2(
 fun Step3(
     title: String,
     category: String,
+    categories: List<Category>,
     description: String,
     date: String,
     time: String,
@@ -837,8 +829,8 @@ fun Step3(
                     contentScale = ContentScale.Crop
                 )
                 Column(modifier = Modifier.padding(16.dp)) {
-                    val categoryLabel = remember(category) {
-                        CATEGORIES.find { it.id == category }?.label?.uppercase() ?: "CATEGORY"
+                    val categoryLabel = remember(category, categories) {
+                        categories.find { it.id == category }?.label?.uppercase() ?: "CATEGORY"
                     }
                     Text(
                         text = categoryLabel,

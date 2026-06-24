@@ -60,6 +60,8 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:model"))
 
+    implementation(project(":core:database"))
+
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

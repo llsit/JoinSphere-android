@@ -1,8 +1,8 @@
 package com.llsit.joinsphere.feature.createevent
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.domain.usecase.CreateEventUseCase
 import com.llsit.joinsphere.core.model.event.EventDto
 import com.llsit.joinsphere.feature.createevent.state.CreateEventIntent
@@ -14,11 +14,14 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class CreateEventViewModel(
-    private val createEventUseCase: CreateEventUseCase
+    private val createEventUseCase: CreateEventUseCase,
+    private val eventRepository: EventRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateEventUiState())
@@ -26,6 +29,25 @@ class CreateEventViewModel(
 
     private val _effect = MutableSharedFlow<CreateEventUiEffect>()
     val effect: SharedFlow<CreateEventUiEffect> = _effect.asSharedFlow()
+
+    init {
+        observeCategories()
+        syncCategories()
+    }
+
+    private fun observeCategories() {
+        eventRepository.getCategories()
+            .onEach { categories ->
+                _uiState.update { it.copy(categories = categories) }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun syncCategories() {
+        viewModelScope.launch {
+            eventRepository.syncCategories()
+        }
+    }
 
     fun processIntent(intent: CreateEventIntent) {
         when (intent) {
@@ -92,11 +114,6 @@ class CreateEventViewModel(
                 _uiState.update { it.copy(isLoading = false, isSubmitted = true) }
                 _effect.emit(CreateEventUiEffect.ShowToast("สร้างกิจกรรมสำเร็จ!"))
             } catch (e: Exception) {
-                Log.e(
-                    "CreateEventViewModel",
-                    "Error publishing event + ${e.localizedMessage ?: "Publish Failed"}",
-                    e
-                )
                 _uiState.update { it.copy(isLoading = false) }
                 _effect.emit(CreateEventUiEffect.ShowToast(e.localizedMessage ?: "Publish Failed"))
             }

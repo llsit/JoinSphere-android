@@ -6,6 +6,6 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val createEventModule = module {
-    viewModel { CreateEventViewModel(get()) }
+    viewModel { CreateEventViewModel(get(), get()) }
     viewModel { LocationPickerViewModel(get(), get()) }
 }

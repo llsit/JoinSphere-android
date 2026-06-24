@@ -1,5 +1,6 @@
 package com.llsit.joinsphere.feature.createevent.state
 
+import com.llsit.joinsphere.core.model.Category
 import com.llsit.joinsphere.core.model.event.SelectedPlace
 import java.time.LocalDate
 import java.time.LocalTime
@@ -13,6 +14,7 @@ data class CreateEventUiState(
 
     val title: String = "",
     val categoryId: String = "",
+    val categories: List<Category> = emptyList(),
     val description: String = "",
     val date: String = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
     val time: String = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
