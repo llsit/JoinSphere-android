@@ -1,8 +1,11 @@
 package com.llsit.joinsphere.feature.discover
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +37,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -63,7 +68,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun DiscoverScreen(
     viewModel: DiscoverViewModel = koinViewModel(),
-    onEventClick: (String) -> Unit = {},
+    onEventClick: (String, String?, String?) -> Unit = { _, _, _ -> },
     onNotificationClick: () -> Unit = {},
     onSearchClick: () -> Unit = {}
 ) {
@@ -254,7 +259,7 @@ fun DiscoverScreen(
                                 onLikeToggle = {
                                     if (liked.contains(ev.id)) liked.remove(ev.id) else liked.add(ev.id)
                                 },
-                                onClick = { onEventClick(ev.id) }
+                                onClick = { onEventClick(ev.id, ev.title, ev.coverImageUrl) }
                             )
                         }
                     }
@@ -290,7 +295,7 @@ fun DiscoverScreen(
                         uiState.thisWeek.forEach { ev ->
                             NearbyEventCard(
                                 event = ev,
-                                onClick = { onEventClick(ev.id) }
+                                onClick = { onEventClick(ev.id, ev.title, ev.coverImageUrl) }
                             )
                         }
                     }
@@ -307,10 +312,22 @@ fun FeaturedEventCard(
     onLikeToggle: () -> Unit,
     onClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.97f else 1f, label = "scale")
+
     Card(
         modifier = Modifier
             .width(272.dp)
-            .clickable { onClick() }
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(),
+                onClick = onClick
+            )
     ) {
         Column {
             Box(modifier = Modifier.height(160.dp)) {
@@ -437,10 +454,22 @@ fun FeaturedEventCard(
 
 @Composable
 fun NearbyEventCard(event: EventNetworkModel, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "scale")
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(),
+                onClick = onClick
+            )
     ) {
         Row(modifier = Modifier.height(110.dp)) {
             Box(modifier = Modifier.width(100.dp)) {

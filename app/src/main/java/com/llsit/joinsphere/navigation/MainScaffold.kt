@@ -61,7 +61,7 @@ private fun mainNavEntries(
         // ── [Tab: Home] ───────────────────────────────────────────────────
         entry<DiscoverKey> {
             DiscoverScreen(
-                onEventClick = { id -> navigator.openEventDetail(id.toString()) },
+                onEventClick = { id, title, img -> navigator.openEventDetail(id, title, img) },
                 onNotificationClick = { navigator.openNotifications() },
                 onSearchClick = { navigator.openSearch() }
             )
@@ -69,7 +69,7 @@ private fun mainNavEntries(
 
         entry<SearchKey> {
             SearchScreen(
-                onEventClick = { id -> navigator.openEventDetail(id.toString()) }
+                onEventClick = { id -> navigator.openEventDetail(id) }
             )
         }
 
@@ -98,8 +98,11 @@ private fun mainNavEntries(
         }
 
         // ── [Global/Detail Screens] ───────────────────────────────────────
-        entry<EventDetailKey> {
+        entry<EventDetailKey> { key ->
             EventDetailScreen(
+                eventId = key.eventId,
+                initialTitle = key.initialTitle,
+                initialImage = key.initialCoverImageUrl,
                 onBackClick = { navigator.goBack() },
                 onJoinClick = { /* Handle join flow */ }
             )

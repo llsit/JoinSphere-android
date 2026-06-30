@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface EventRepository {
     suspend fun createEvent(event: EventDto): Result<Unit>
+    suspend fun getEventDetail(eventId: String): Result<EventDto>
     suspend fun uploadCoverImage(
         userId: String,
         eventId: String,

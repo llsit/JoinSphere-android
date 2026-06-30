@@ -99,7 +99,11 @@ class AppNavigator(
     fun openSearch() = navigateTo(SearchKey)
 
     // เปิดหน้ารายละเอียดอีเวนต์ในแท็บปัจจุบันที่ผู้ใช้กำลังใช้งานอยู่
-    fun openEventDetail(eventId: String) = navigateTo(EventDetailKey(eventId))
+    fun openEventDetail(
+        eventId: String,
+        title: String? = null,
+        imageUrl: String? = null
+    ) = navigateTo(EventDetailKey(eventId, title, imageUrl))
 
     // เปิดหน้าสร้างอีเวนต์
     fun openCreateEvent() = navigateTo(CreateEventKey)

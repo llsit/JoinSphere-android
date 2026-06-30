@@ -1,7 +1,10 @@
 package com.llsit.joinsphere.feature.myevents
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +21,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,7 +43,7 @@ enum class MyEventsTab(val label: String) {
 
 @Composable
 fun MyEventsScreen(
-    onEventClick: (String) -> Unit = {},
+    onEventClick: (String, String?, String?) -> Unit = { _, _, _ -> },
     onCreateEventClick: () -> Unit = {},
     onChatClick: (String) -> Unit = {}
 ) {
@@ -127,7 +131,7 @@ fun MyEventsScreen(
                     items(MOCK_ATTENDING) { event ->
                         UpcomingEventCard(
                             event = event,
-                            onDetailsClick = { onEventClick(event.id.toString()) },
+                            onDetailsClick = { onEventClick(event.id.toString(), event.title, event.image) },
                             onChatClick = { onChatClick(event.id.toString()) }
                         )
                     }
@@ -139,7 +143,7 @@ fun MyEventsScreen(
                     items(MOCK_HOSTING) { event ->
                         HostingEventCard(
                             event = event,
-                            onDetailsClick = { onEventClick(event.id.toString()) }
+                            onDetailsClick = { onEventClick(event.id.toString(), event.title, event.image) }
                         )
                     }
                 }
@@ -167,8 +171,22 @@ fun UpcomingEventCard(
     onDetailsClick: () -> Unit,
     onChatClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "scale")
+
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(),
+                onClick = onDetailsClick
+            )
     ) {
         Column {
             // Image
@@ -353,8 +371,22 @@ fun HostingEventCard(
     event: HostingEvent,
     onDetailsClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "scale")
+
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(),
+                onClick = onDetailsClick
+            )
     ) {
         Column {
             Box(modifier = Modifier.height(128.dp)) {
@@ -615,7 +647,7 @@ val MOCK_ATTENDING = listOf(
         price = "$25",
         status = "confirmed",
         image = "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=400&h=280&fit=crop&auto=format",
-        hostAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=60&h=60&fit=crop&auto=format",
+        hostAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=60&h=80&fit=crop&auto=format",
         hostName = "Marcus Wong",
         unread = 0
     ),

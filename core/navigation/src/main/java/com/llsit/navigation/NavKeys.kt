@@ -44,7 +44,11 @@ data object ProfileKey : NavKey
 
 // สำหรับหน้าแสดงรายละเอียดอีเวนต์ ต้องรู้ว่าคืออีเวนต์ไหน
 @Serializable
-data class EventDetailKey(val eventId: String) : NavKey
+data class EventDetailKey(
+    val eventId: String,
+    val initialTitle: String? = null,
+    val initialCoverImageUrl: String? = null
+) : NavKey
 
 // สำหรับหน้าสร้างอีเวนต์ใหม่
 @Serializable

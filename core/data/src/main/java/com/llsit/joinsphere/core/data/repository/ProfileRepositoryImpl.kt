@@ -23,6 +23,16 @@ class ProfileRepositoryImpl(
             .decodeSingle<UserProfileDto>()
     }
 
+    override suspend fun getUserProfile(userId: String): Result<UserProfileDto> = runCatching {
+        supabase.postgrest["users"]
+            .select {
+                filter {
+                    eq("id", userId)
+                }
+            }
+            .decodeSingle<UserProfileDto>()
+    }
+
     override suspend fun updateImageProfile(imageByteArray: ByteArray): Result<String> = runCatching {
         val userId = supabase.auth.currentUserOrNull()?.id
             ?: throw Exception("ไม่พบข้อมูลผู้ใช้")

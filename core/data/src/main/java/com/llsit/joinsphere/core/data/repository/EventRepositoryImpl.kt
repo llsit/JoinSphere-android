@@ -30,6 +30,14 @@ class EventRepositoryImpl(
         supabase.from("events").insert(event)
     }
 
+    override suspend fun getEventDetail(eventId: String): Result<EventDto> = runCatching {
+        supabase.from("events").select {
+            filter {
+                eq("id", eventId)
+            }
+        }.decodeSingle<EventDto>()
+    }
+
     override suspend fun uploadCoverImage(
         userId: String,
         eventId: String,

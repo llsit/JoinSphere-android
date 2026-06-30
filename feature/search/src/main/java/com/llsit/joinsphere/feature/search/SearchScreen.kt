@@ -1,7 +1,11 @@
 package com.llsit.joinsphere.feature.search
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +44,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -193,7 +199,7 @@ val SORT_OPTS = listOf("Relevance", "Date", "Rating", "Attendees")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(onEventClick: (Int) -> Unit = {}) {
+fun SearchScreen(onEventClick: (String, String?, String?) -> Unit = { _, _, _ -> }) {
     var query by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("All") }
     var priceFilter by remember { mutableStateOf("Any price") }
@@ -408,7 +414,7 @@ fun SearchScreen(onEventClick: (Int) -> Unit = {}) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 filteredEvents.forEach { ev ->
-                    SearchResultCard(event = ev, onClick = { onEventClick(ev.id) })
+                    SearchResultCard(event = ev, onClick = { onEventClick(ev.id.toString(), ev.title, ev.image) })
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -418,12 +424,22 @@ fun SearchScreen(onEventClick: (Int) -> Unit = {}) {
 
 @Composable
 fun SearchResultCard(event: SearchEvent, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "scale")
+
     Surface(
         onClick = onClick,
+        interactionSource = interactionSource,
         shape = RoundedCornerShape(24.dp),
         color = Color.White,
         shadowElevation = 2.dp,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
     ) {
         Row(modifier = Modifier.height(110.dp)) {
             Box(modifier = Modifier.width(96.dp)) {
