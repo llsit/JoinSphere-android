@@ -28,13 +28,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
@@ -165,7 +165,7 @@ fun EventDetailScreen(
                             )
                         ) {
                             Icon(
-                                Icons.Outlined.ArrowBack,
+                                Icons.AutoMirrored.Outlined.ArrowBack,
                                 contentDescription = "Back",
                                 tint = Color.White
                             )
@@ -245,7 +245,10 @@ fun EventDetailScreen(
                             ) {
                                 Text(
                                     text = "$categoryEmoji $categoryLabel",
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    modifier = Modifier.padding(
+                                        horizontal = 10.dp,
+                                        vertical = 4.dp
+                                    ),
                                     color = Color(0xFF1757F0),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold
@@ -500,7 +503,11 @@ fun EventDetailScreen(
         } else if (uiState.isLoading) {
             androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else if (uiState.error != null) {
-            Text(text = uiState.error!!, modifier = Modifier.align(Alignment.Center), color = Color.Red)
+            Text(
+                text = uiState.error!!,
+                modifier = Modifier.align(Alignment.Center),
+                color = Color.Red
+            )
         }
     }
 }

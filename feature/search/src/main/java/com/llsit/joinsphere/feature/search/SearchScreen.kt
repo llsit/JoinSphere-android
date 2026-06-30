@@ -3,7 +3,6 @@ package com.llsit.joinsphere.feature.search
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +43,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -414,7 +412,9 @@ fun SearchScreen(onEventClick: (String, String?, String?) -> Unit = { _, _, _ ->
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 filteredEvents.forEach { ev ->
-                    SearchResultCard(event = ev, onClick = { onEventClick(ev.id.toString(), ev.title, ev.image) })
+                    SearchResultCard(
+                        event = ev,
+                        onClick = { onEventClick(ev.id.toString(), ev.title, ev.image) })
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }

@@ -69,7 +69,13 @@ private fun mainNavEntries(
 
         entry<SearchKey> {
             SearchScreen(
-                onEventClick = { id -> navigator.openEventDetail(id) }
+                onEventClick = { id, title, imageUrl ->
+                    navigator.openEventDetail(
+                        id,
+                        title,
+                        imageUrl
+                    )
+                }
             )
         }
 
@@ -81,7 +87,13 @@ private fun mainNavEntries(
         // ── [Tab: Events] ─────────────────────────────────────────────────
         entry<MyActivitiesKey> {
             MyEventsScreen(
-                onEventClick = { id -> navigator.openEventDetail(id) },
+                onEventClick = { id, title, imageUrl ->
+                    navigator.openEventDetail(
+                        id,
+                        title,
+                        imageUrl
+                    )
+                },
                 onCreateEventClick = { navigator.openCreateEvent() },
                 onChatClick = { id -> navigator.openChatRoom(id, "Event Chat") }
             )

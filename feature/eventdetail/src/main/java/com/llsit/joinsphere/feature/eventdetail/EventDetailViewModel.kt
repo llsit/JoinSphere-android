@@ -54,7 +54,7 @@ class EventDetailViewModel(
                 _uiState.update { it.copy(host = host, isLoading = false) }
             }
             .onFailure { e ->
-                _uiState.update { it.copy(isLoading = false) } // We still show the event even if host fetch fails
+                _uiState.update { it.copy(isLoading = false) }
             }
     }
 }

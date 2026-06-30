@@ -58,7 +58,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import com.llsit.joinsphere.core.design.Card
 import com.llsit.joinsphere.core.model.Category
@@ -219,7 +218,11 @@ fun DiscoverScreen(
                     .height(300.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = uiState.error ?: "Unknown error", color = Color.Red, textAlign = TextAlign.Center)
+                Text(
+                    text = uiState.error ?: "Unknown error",
+                    color = Color.Red,
+                    textAlign = TextAlign.Center
+                )
             }
         } else {
             // Featured events section
