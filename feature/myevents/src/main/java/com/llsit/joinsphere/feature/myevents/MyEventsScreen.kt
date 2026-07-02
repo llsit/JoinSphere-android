@@ -28,12 +28,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.llsit.joinsphere.core.design.Button
 import com.llsit.joinsphere.core.design.ButtonSize
 import com.llsit.joinsphere.core.design.ButtonVariant
 import com.llsit.joinsphere.core.design.Card
 import com.llsit.joinsphere.core.design.Progress
+import com.llsit.joinsphere.core.model.event.EventDto
+import org.koin.androidx.compose.koinViewModel
 
 enum class MyEventsTab(val label: String) {
     Upcoming("Upcoming"),
@@ -45,8 +48,10 @@ enum class MyEventsTab(val label: String) {
 fun MyEventsScreen(
     onEventClick: (String, String?, String?) -> Unit = { _, _, _ -> },
     onCreateEventClick: () -> Unit = {},
-    onChatClick: (String) -> Unit = {}
+    onChatClick: (String) -> Unit = {},
+    viewModel: MyEventsViewModel = koinViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableStateOf(MyEventsTab.Upcoming) }
 
     Column(
@@ -140,11 +145,45 @@ fun MyEventsScreen(
                     item {
                         CreateEventButton(onClick = onCreateEventClick)
                     }
-                    items(MOCK_HOSTING) { event ->
-                        HostingEventCard(
-                            event = event,
-                            onDetailsClick = { onEventClick(event.id.toString(), event.title, event.image) }
-                        )
+                    if (uiState.isLoading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    } else if (uiState.hostingEvents.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "You are not hosting any events yet",
+                                    color = Color(0xFF737880),
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    } else {
+                        items(uiState.hostingEvents) { event ->
+                            HostingEventCard(
+                                event = event,
+                                onDetailsClick = {
+                                    onEventClick(
+                                        event.id.toString(),
+                                        event.title,
+                                        event.coverImageUrl
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
                 MyEventsTab.Past -> {
@@ -368,7 +407,7 @@ fun UpcomingEventCard(
 
 @Composable
 fun HostingEventCard(
-    event: HostingEvent,
+    event: EventDto,
     onDetailsClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -391,7 +430,7 @@ fun HostingEventCard(
         Column {
             Box(modifier = Modifier.height(128.dp)) {
                 AsyncImage(
-                    model = event.image,
+                    model = event.coverImageUrl,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -481,7 +520,7 @@ fun HostingEventCard(
                         )
                         Spacer(modifier = Modifier.width(5.dp))
                         Text(
-                            text = event.location,
+                            text = event.address,
                             fontSize = 13.sp,
                             color = Color(0xFF737880)
                         )
@@ -496,12 +535,12 @@ fun HostingEventCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${event.attendees} attending",
+                        text = "${event.attendeeCount ?: 0} attending",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "of ${event.maxAttendees} spots",
+                        text = "of ${event.maxAttendees ?: 0} spots",
                         fontSize = 12.sp,
                         color = Color(0xFF737880)
                     )
@@ -510,7 +549,7 @@ fun HostingEventCard(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Progress(
-                    value = event.attendees.toFloat() / event.maxAttendees,
+                    value = (event.attendeeCount ?: 0).toFloat() / (event.maxAttendees ?: 1).coerceAtLeast(1),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -666,36 +705,6 @@ val MOCK_ATTENDING = listOf(
         hostAvatar = "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=60&h=60&fit=crop&auto=format",
         hostName = "Priya Nair",
         unread = 3
-    )
-)
-
-data class HostingEvent(
-    val id: Int,
-    val title: String,
-    val category: String,
-    val date: String,
-    val time: String,
-    val location: String,
-    val attendees: Int,
-    val maxAttendees: Int,
-    val price: String,
-    val image: String,
-    val unread: Int
-)
-
-val MOCK_HOSTING = listOf(
-    HostingEvent(
-        id = 4,
-        title = "Neighborhood Cleanup & Brunch",
-        category = "Social",
-        date = "Sun, Jun 22",
-        time = "9:00 AM",
-        location = "Dolores Park",
-        attendees = 18,
-        maxAttendees = 30,
-        price = "Free",
-        image = "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400&h=280&fit=crop&auto=format",
-        unread = 5
     )
 )
 

@@ -1,5 +1,9 @@
 package com.llsit.joinsphere.feature.onboarding
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -41,12 +45,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.llsit.joinsphere.core.design.Button
 import org.koin.androidx.compose.koinViewModel
 
@@ -82,6 +88,12 @@ private val SCREENS = listOf(
         description = "Ready to lead? Organize your own meetup and build your community today.",
         features = listOf("Easy Hosting", "RSVP Tracking", "Chat Groups"),
         illustration = { PlaceholderIllustration(Color(0xFFFEF3C7)) }
+    ),
+    OnboardingStep(
+        title = "Near you,\nanywhere you go",
+        description = "Allow location access to find activities happening in your area and help you find your way to meetups.",
+        features = listOf("Nearby Events", "Live Map", "Local Alerts"),
+        illustration = { PlaceholderIllustration(Color(0xFFE0E7FF)) }
     )
 )
 
@@ -104,6 +116,17 @@ private fun OnboardingScreenContent(
 ) {
     var currentStep by remember { mutableIntStateOf(0) }
     var isDone by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { _ ->
+        if (currentStep < SCREENS.size - 1) {
+            currentStep++
+        } else {
+            isDone = true
+        }
+    }
 
     val handleComplete = {
         onCompleteOnboarding()
@@ -116,7 +139,33 @@ private fun OnboardingScreenContent(
         OnboardingFlowContent(
             currentStep = currentStep,
             onNext = {
-                if (currentStep < SCREENS.size - 1) {
+                if (currentStep == 3) {
+                    val fineLocationPermission = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                    val coarseLocationPermission = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+
+                    if (fineLocationPermission == PackageManager.PERMISSION_GRANTED ||
+                        coarseLocationPermission == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        if (currentStep < SCREENS.size - 1) {
+                            currentStep++
+                        } else {
+                            isDone = true
+                        }
+                    } else {
+                        permissionLauncher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
+                    }
+                } else if (currentStep < SCREENS.size - 1) {
                     currentStep++
                 } else {
                     isDone = true

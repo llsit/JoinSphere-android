@@ -36,7 +36,7 @@ class EventDetailViewModel(
     fun loadEventDetail(eventId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            
+
             eventRepository.getEventDetail(eventId)
                 .onSuccess { event ->
                     _uiState.update { it.copy(event = event) }
@@ -54,7 +54,7 @@ class EventDetailViewModel(
                 _uiState.update { it.copy(host = host, isLoading = false) }
             }
             .onFailure { e ->
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
             }
     }
 }

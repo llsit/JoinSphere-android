@@ -87,4 +87,12 @@ class EventRepositoryImpl(
             Timber.e(it, "Error syncing categories")
         }
     }
+
+    override suspend fun getHostingEvents(userId: String): Result<List<EventDto>> = runCatching {
+        supabase.from("events").select {
+            filter {
+                eq("creator_id", userId)
+            }
+        }.decodeList<EventDto>()
+    }
 }

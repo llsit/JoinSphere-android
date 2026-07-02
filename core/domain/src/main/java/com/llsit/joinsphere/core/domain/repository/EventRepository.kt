@@ -22,4 +22,5 @@ interface EventRepository {
 
     fun getCategories(): Flow<List<Category>>
     suspend fun syncCategories(): Result<Unit>
+    suspend fun getHostingEvents(userId: String): Result<List<EventDto>>
 }

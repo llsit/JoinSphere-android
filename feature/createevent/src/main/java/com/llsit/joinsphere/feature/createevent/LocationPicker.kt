@@ -283,8 +283,28 @@ fun LocationPickerDialog(
             // Current Location Button
             IconButton(
                 onClick = {
-                    viewModel.getCurrentLocation { lat, lng ->
-                        mapView.controller.animateTo(GeoPoint(lat, lng))
+                    val fineLocationPermission = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                    val coarseLocationPermission = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+
+                    if (fineLocationPermission == PackageManager.PERMISSION_GRANTED ||
+                        coarseLocationPermission == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        viewModel.getCurrentLocation { lat, lng ->
+                            mapView.controller.animateTo(GeoPoint(lat, lng))
+                        }
+                    } else {
+                        permissionLauncher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
                     }
                 },
                 modifier = Modifier
