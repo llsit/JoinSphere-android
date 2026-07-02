@@ -3,6 +3,7 @@ package com.llsit.joinsphere.splash
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.llsit.joinsphere.core.data.local.PreferencesDataSource
+import com.llsit.joinsphere.core.domain.repository.AuthRepository
 import com.llsit.joinsphere.core.domain.repository.EventRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -31,7 +32,8 @@ enum class SplashDestination {
 
 class SplashViewModel(
     private val preferencesDataSource: PreferencesDataSource,
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SplashUiState())
@@ -46,19 +48,24 @@ class SplashViewModel(
 
     fun checkNavigationDestination() {
         viewModelScope.launch {
-            // Start syncing categories in parallel
             val syncJob = async { eventRepository.syncCategories() }
             
             val shouldShowOnboarding = preferencesDataSource.shouldShowOnboarding.first()
             val token = preferencesDataSource.sessionDataValue()
 
-            // Wait for sync to complete (optional, but good for first run)
             syncJob.await()
 
             val destination = when {
                 shouldShowOnboarding -> SplashDestination.ONBOARDING
                 token.isNullOrBlank() -> SplashDestination.LOGIN
-                else -> SplashDestination.HOME
+                else -> {
+                    val refreshResult = authRepository.refreshSession()
+                    if (refreshResult.getOrDefault(false)) {
+                        SplashDestination.HOME
+                    } else {
+                        SplashDestination.LOGIN
+                    }
+                }
             }
 
             _uiState.update { it.copy(isLoading = false) }

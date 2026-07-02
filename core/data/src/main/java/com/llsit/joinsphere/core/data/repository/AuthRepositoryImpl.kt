@@ -49,4 +49,9 @@ class AuthRepositoryImpl(
     override suspend fun logout(): Result<Unit> = runCatching {
         supabase.auth.signOut()
     }
+
+    override suspend fun refreshSession(): Result<Boolean> = runCatching {
+        supabase.auth.refreshCurrentSession()
+        supabase.auth.currentSessionOrNull() != null
+    }
 }
