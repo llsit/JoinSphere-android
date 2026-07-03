@@ -40,5 +40,5 @@ data class EventDto(
     @SerialName("attendee_count")
     val attendeeCount: Int? = 1,
     @SerialName("start_timestamp")
-    val startTimestamp: String
+    val startTimestamp: String? = ""
 )

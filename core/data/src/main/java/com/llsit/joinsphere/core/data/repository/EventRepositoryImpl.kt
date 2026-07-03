@@ -6,6 +6,7 @@ import com.llsit.joinsphere.core.database.entity.toExternalModel
 import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.model.Category
 import com.llsit.joinsphere.core.model.DiscoverFeedsResponse
+import com.llsit.joinsphere.core.model.event.EventAttendeeDto
 import com.llsit.joinsphere.core.model.event.EventDto
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -94,5 +95,20 @@ class EventRepositoryImpl(
                 eq("creator_id", userId)
             }
         }.decodeList<EventDto>()
+    }
+
+    override suspend fun joinEvent(eventId: String, userId: String): Result<Unit> = runCatching {
+        val attendee = EventAttendeeDto(eventId = eventId, userId = userId)
+        supabase.from("event_attendees").insert(attendee)
+    }
+
+    override suspend fun isUserAttending(eventId: String, userId: String): Result<Boolean> = runCatching {
+        val response = supabase.from("event_attendees").select {
+            filter {
+                eq("event_id", eventId)
+                eq("user_id", userId)
+            }
+        }.decodeList<EventAttendeeDto>()
+        response.isNotEmpty()
     }
 }

@@ -2,6 +2,7 @@ package com.llsit.joinsphere.feature.eventdetail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.llsit.joinsphere.core.domain.repository.AuthRepository
 import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.domain.repository.ProfileRepository
 import com.llsit.joinsphere.feature.eventdetail.state.EventDetailUiState
@@ -15,7 +16,8 @@ import kotlinx.coroutines.launch
 
 class EventDetailViewModel(
     private val eventRepository: EventRepository,
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EventDetailUiState())
@@ -41,9 +43,44 @@ class EventDetailViewModel(
                 .onSuccess { event ->
                     _uiState.update { it.copy(event = event) }
                     fetchHostProfile(event.creatorId)
+                    checkAttendingStatus(eventId)
                 }
                 .onFailure { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message) }
+                }
+        }
+    }
+
+    private fun checkAttendingStatus(eventId: String) {
+        val userId = authRepository.getCurrentUserId() ?: return
+        viewModelScope.launch {
+            eventRepository.isUserAttending(eventId, userId)
+                .onSuccess { isAttending ->
+                    _uiState.update { it.copy(isAttending = isAttending) }
+                }
+        }
+    }
+
+    fun joinEvent() {
+        val eventId = uiState.value.event?.id ?: return
+        val userId = authRepository.getCurrentUserId() ?: return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isJoining = true, error = null) }
+            eventRepository.joinEvent(eventId, userId)
+                .onSuccess {
+                    _uiState.update { state ->
+                        state.copy(
+                            isJoining = false,
+                            isAttending = true,
+                            event = state.event?.copy(
+                                attendeeCount = (state.event.attendeeCount ?: 0) + 1
+                            )
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isJoining = false, error = e.message) }
                 }
         }
     }

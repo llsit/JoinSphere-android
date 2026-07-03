@@ -116,7 +116,7 @@ private fun mainNavEntries(
                 initialTitle = key.initialTitle,
                 initialImage = key.initialCoverImageUrl,
                 onBackClick = { navigator.goBack() },
-                onJoinClick = { /* Handle join flow */ }
+                onChatClick = { id -> navigator.openChatRoom(id, "Event Chat") }
             )
         }
 

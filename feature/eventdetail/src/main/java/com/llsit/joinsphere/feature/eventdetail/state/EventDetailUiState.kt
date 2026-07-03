@@ -6,6 +6,8 @@ import com.llsit.joinsphere.core.model.event.EventDto
 
 data class EventDetailUiState(
     val isLoading: Boolean = false,
+    val isJoining: Boolean = false,
+    val isAttending: Boolean = false,
     val event: EventDto? = null,
     val host: UserProfileDto? = null,
     val categories: List<Category> = emptyList(),

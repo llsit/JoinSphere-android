@@ -72,7 +72,7 @@ fun EventDetailScreen(
     initialImage: String? = null,
     viewModel: EventDetailViewModel = koinViewModel(),
     onBackClick: () -> Unit = {},
-    onJoinClick: () -> Unit = {}
+    onChatClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -487,16 +487,36 @@ fun EventDetailScreen(
                         }
                     }
                     Button(
-                        onClick = onJoinClick,
-                        enabled = event != null,
+                        onClick = {
+                            if (uiState.isAttending) {
+                                onChatClick(eventId)
+                            } else {
+                                viewModel.joinEvent()
+                            }
+                        },
+                        enabled = event != null && !uiState.isJoining,
                         modifier = Modifier
                             .height(56.dp)
                             .weight(1f)
                             .padding(start = 24.dp),
                         shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1757F0))
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (uiState.isAttending) Color(0xFF16A34A) else Color(0xFF1757F0)
+                        )
                     ) {
-                        Text("Join this event", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        if (uiState.isJoining) {
+                            androidx.compose.material3.CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                if (uiState.isAttending) "Go to Chat" else "Join this event",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
