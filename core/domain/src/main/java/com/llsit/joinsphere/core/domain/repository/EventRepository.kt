@@ -25,5 +25,6 @@ interface EventRepository {
     suspend fun syncCategories(): Result<Unit>
     suspend fun getHostingEvents(userId: String): Result<List<EventDto>>
     suspend fun joinEvent(eventId: String, userId: String): Result<Unit>
+    suspend fun cancelJoinEvent(eventId: String, userId: String): Result<Unit>
     suspend fun isUserAttending(eventId: String, userId: String): Result<Boolean>
 }

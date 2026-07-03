@@ -53,6 +53,7 @@ dependencies {
     implementation(project(":feature:profile"))
     implementation(project(":feature:myevents"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:notifications"))
 
     // Core
     implementation(project(":core:data"))

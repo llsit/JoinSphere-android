@@ -70,7 +70,6 @@ val BADGES = listOf(
 
 @Composable
 fun ProfileScreen(
-    onLogout: () -> Unit = {},
     onEditProfileClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     profileViewModel: ProfileViewModel = koinViewModel()

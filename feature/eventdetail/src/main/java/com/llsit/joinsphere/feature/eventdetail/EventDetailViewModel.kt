@@ -1,5 +1,6 @@
 package com.llsit.joinsphere.feature.eventdetail
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.llsit.joinsphere.core.domain.repository.AuthRepository
@@ -80,6 +81,32 @@ class EventDetailViewModel(
                     }
                 }
                 .onFailure { e ->
+                    Log.e("EventDetailViewModel", "EventDetailViewModel Error : ${e.message}")
+                    _uiState.update { it.copy(isJoining = false, error = e.message) }
+                }
+        }
+    }
+
+    fun cancelJoinEvent() {
+        val eventId = uiState.value.event?.id ?: return
+        val userId = authRepository.getCurrentUserId() ?: return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isJoining = true, error = null) }
+            eventRepository.cancelJoinEvent(eventId, userId)
+                .onSuccess {
+                    _uiState.update { state ->
+                        state.copy(
+                            isJoining = false,
+                            isAttending = false,
+                            event = state.event?.copy(
+                                attendeeCount = (state.event.attendeeCount ?: 0).minus(1).coerceAtLeast(0)
+                            )
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    Log.e("EventDetailViewModel", "CancelJoin Error : ${e.message}")
                     _uiState.update { it.copy(isJoining = false, error = e.message) }
                 }
         }

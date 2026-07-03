@@ -10,6 +10,7 @@ import com.llsit.joinsphere.feature.createevent.di.createEventModule
 import com.llsit.joinsphere.feature.discover.di.discoverModule
 import com.llsit.joinsphere.feature.eventdetail.di.eventDetailModule
 import com.llsit.joinsphere.feature.myevents.di.myEventsModule
+import com.llsit.joinsphere.feature.notifications.di.notificationsModule
 import com.llsit.joinsphere.feature.onboarding.di.onboardingModule
 import com.llsit.joinsphere.feature.profile.di.profileModule
 import com.llsit.joinsphere.feature.settings.di.settingsModule
@@ -40,7 +41,8 @@ class JoinSphereApplication : Application() {
                 createEventModule,
                 discoverModule,
                 eventDetailModule,
-                myEventsModule
+                myEventsModule,
+                notificationsModule
             )
         }
     }

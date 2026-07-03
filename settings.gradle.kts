@@ -34,6 +34,7 @@ include(":feature:chat")
 include(":feature:profile")
 include(":feature:myevents")
 include(":feature:settings")
+include(":feature:notifications")
 
 include(":core:domain")
 include(":core:data")

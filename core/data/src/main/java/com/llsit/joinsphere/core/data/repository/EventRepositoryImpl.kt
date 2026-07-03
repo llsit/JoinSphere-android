@@ -102,6 +102,15 @@ class EventRepositoryImpl(
         supabase.from("event_attendees").insert(attendee)
     }
 
+    override suspend fun cancelJoinEvent(eventId: String, userId: String): Result<Unit> = runCatching {
+        supabase.from("event_attendees").delete {
+            filter {
+                eq("event_id", eventId)
+                eq("user_id", userId)
+            }
+        }
+    }
+
     override suspend fun isUserAttending(eventId: String, userId: String): Result<Boolean> = runCatching {
         val response = supabase.from("event_attendees").select {
             filter {

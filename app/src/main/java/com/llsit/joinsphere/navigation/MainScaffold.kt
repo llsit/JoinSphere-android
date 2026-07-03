@@ -15,6 +15,7 @@ import com.llsit.joinsphere.feature.createevent.CreateEventScreen
 import com.llsit.joinsphere.feature.discover.DiscoverScreen
 import com.llsit.joinsphere.feature.eventdetail.EventDetailScreen
 import com.llsit.joinsphere.feature.myevents.MyEventsScreen
+import com.llsit.joinsphere.feature.notifications.NotificationsScreen
 import com.llsit.joinsphere.feature.profile.ProfileScreen
 import com.llsit.joinsphere.feature.search.SearchScreen
 import com.llsit.joinsphere.feature.settings.SettingsScreen
@@ -102,9 +103,6 @@ private fun mainNavEntries(
         // ── [Tab: Profile] ────────────────────────────────────────────────
         entry<ProfileKey> {
             ProfileScreen(
-                onLogout = {
-                    navigator.navigateToAuth()
-                },
                 onSettingsClick = { navigator.openSettings() }
             )
         }
@@ -125,7 +123,9 @@ private fun mainNavEntries(
         }
 
         entry<NotificationsKey> {
-            PlaceholderScreen(name = "Notifications")
+            NotificationsScreen(
+                onBackClick = { navigator.goBack() }
+            )
         }
 
         entry<SettingsKey> {
