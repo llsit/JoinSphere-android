@@ -39,11 +39,14 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -81,11 +84,12 @@ fun EventDetailScreen(
     }
 
     var isLiked by remember { mutableStateOf(false) }
+    var showCancelDialog by remember { mutableStateOf(false) }
+    var showJoinDialog by remember { mutableStateOf(false) }
 
     val event = uiState.event
     val host = uiState.host
 
-    // Use initial data if real data is still loading
     val displayTitle = event?.title ?: initialTitle ?: ""
     val displayImage = event?.coverImageUrl ?: initialImage
 
@@ -112,6 +116,52 @@ fun EventDetailScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
+        if (showJoinDialog) {
+            AlertDialog(
+                onDismissRequest = { showJoinDialog = false },
+                title = { Text("เข้าร่วมกิจกรรม") },
+                text = { Text("คุณแน่ใจหรือไม่ว่าต้องการเข้าร่วมกิจกรรมนี้?") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.joinEvent()
+                            showJoinDialog = false
+                        }
+                    ) {
+                        Text("ยืนยัน", color = Color(0xFF1757F0))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showJoinDialog = false }) {
+                        Text("ยกเลิก")
+                    }
+                }
+            )
+        }
+
+        if (showCancelDialog) {
+            AlertDialog(
+                onDismissRequest = { showCancelDialog = false },
+                title = { Text("ยกเลิกการเข้าร่วม") },
+                text = { Text("คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการเข้าร่วมกิจกรรมนี้?") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.cancelJoinEvent()
+                            showCancelDialog = false
+                        }
+                    ) {
+                        Text("ยืนยัน", color = Color.Red)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCancelDialog = false }) {
+                        Text("ยกเลิก")
+                    }
+                }
+            )
+        }
+
         // Main Content Layer
         if (event != null || initialTitle != null) {
             Column(
@@ -486,42 +536,62 @@ fun EventDetailScreen(
                             )
                         }
                     }
-                    Button(
-                        onClick = {
-                            if (uiState.isAttending) {
-                                onChatClick(eventId)
-                            } else {
-                                viewModel.joinEvent()
-                            }
-                        },
-                        enabled = event != null && !uiState.isJoining,
+                    Row(
                         modifier = Modifier
-                            .height(56.dp)
                             .weight(1f)
                             .padding(start = 24.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (uiState.isAttending) Color(0xFF16A34A) else Color(0xFF1757F0)
-                        )
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (uiState.isJoining) {
-                            androidx.compose.material3.CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
+                        if (uiState.isAttending && !uiState.isJoining) {
+                            OutlinedButton(
+                                onClick = { showCancelDialog = true },
+                                modifier = Modifier.height(56.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+                            ) {
+                                Text("Leave", color = Color.Gray, fontSize = 14.sp)
+                            }
+                        }
+
+                        Button(
+                            onClick = {
+                                if (uiState.isAttending) {
+                                    onChatClick(eventId)
+                                } else {
+                                    showJoinDialog = true
+                                }
+                            },
+                            enabled = event != null && !uiState.isJoining,
+                            modifier = Modifier
+                                .height(56.dp)
+                                .weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (uiState.isAttending) Color(0xFF16A34A) else Color(
+                                    0xFF1757F0
+                                )
                             )
-                        } else {
-                            Text(
-                                if (uiState.isAttending) "Go to Chat" else "Join this event",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                        ) {
+                            if (uiState.isJoining) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(
+                                    if (uiState.isAttending) "Go to Chat" else "Join this event",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
             }
         } else if (uiState.isLoading) {
-            androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else if (uiState.error != null) {
             Text(
                 text = uiState.error!!,
