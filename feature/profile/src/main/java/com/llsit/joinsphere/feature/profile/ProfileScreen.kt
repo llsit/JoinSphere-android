@@ -24,6 +24,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
@@ -72,6 +73,7 @@ val BADGES = listOf(
 fun ProfileScreen(
     onEditProfileClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
     profileViewModel: ProfileViewModel = koinViewModel()
 ) {
     val uiState by profileViewModel.uiState.collectAsStateWithLifecycle()
@@ -121,6 +123,7 @@ fun ProfileScreen(
             profile = profile,
             onEditProfileClick = onEditProfileClick,
             onSettingsClick = onSettingsClick,
+            onNotificationsClick = onNotificationsClick,
             onAvatarClick = { profileViewModel.dispatchGalleryEffect() }
         )
     }
@@ -131,6 +134,7 @@ fun ProfileContent(
     profile: UserProfileDto,
     onEditProfileClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
     onAvatarClick: () -> Unit = {}
 ) {
     Column(
@@ -157,22 +161,43 @@ fun ProfileContent(
                             )
                         )
                 ) {
-                    IconButton(
-                        onClick = onSettingsClick,
+                    Row(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                            .background(
-                                Color.Black.copy(alpha = 0.2f),
-                                androidx.compose.foundation.shape.CircleShape
-                            )
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        IconButton(
+                            onClick = onNotificationsClick,
+                            modifier = Modifier
+                                .background(
+                                    Color.Black.copy(alpha = 0.2f),
+                                    androidx.compose.foundation.shape.CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notifications",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = onSettingsClick,
+                            modifier = Modifier
+                                .background(
+                                    Color.Black.copy(alpha = 0.2f),
+                                    androidx.compose.foundation.shape.CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Settings",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
 

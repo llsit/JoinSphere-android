@@ -96,14 +96,16 @@ private fun mainNavEntries(
                     )
                 },
                 onCreateEventClick = { navigator.openCreateEvent() },
-                onChatClick = { id -> navigator.openChatRoom(id, "Event Chat") }
+                onChatClick = { id -> navigator.openChatRoom(id, "Event Chat") },
+                onNotificationClick = { navigator.openNotifications() }
             )
         }
 
         // ── [Tab: Profile] ────────────────────────────────────────────────
         entry<ProfileKey> {
             ProfileScreen(
-                onSettingsClick = { navigator.openSettings() }
+                onSettingsClick = { navigator.openSettings() },
+                onNotificationsClick = { navigator.openNotifications() }
             )
         }
 

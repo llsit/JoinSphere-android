@@ -10,12 +10,16 @@ data class Notification(
     val type: NotificationType,
     val timestamp: Long,
     val isRead: Boolean = false,
+    val imageUrl: String? = null,
+    val senderName: String? = null,
+    val actionText: String? = null,
+    val progress: Int? = null,
     val metadata: Map<String, String> = emptyMap()
 )
 
 enum class NotificationType {
-    EVENT_INVITATION,
-    EVENT_REMINDER,
-    CHAT_MESSAGE,
+    EVENT,
+    FRIEND_REQUEST,
+    MESSAGE,
     SYSTEM
 }

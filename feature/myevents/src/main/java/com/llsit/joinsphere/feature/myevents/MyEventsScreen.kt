@@ -49,6 +49,7 @@ fun MyEventsScreen(
     onEventClick: (String, String?, String?) -> Unit = { _, _, _ -> },
     onCreateEventClick: () -> Unit = {},
     onChatClick: (String) -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     viewModel: MyEventsViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -64,13 +65,36 @@ fun MyEventsScreen(
             modifier = Modifier
                 .padding(top = 16.dp, start = 20.dp, end = 20.dp, bottom = 12.dp)
         ) {
-            Text(
-                text = "My Events",
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.5).sp,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "My Events",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .offset(y = (-8).dp)
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        .clickable { onNotificationClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Notifications,
+                        contentDescription = "Notifications",
+                        tint = Color(0xFF0D0F14),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
 
             // Tabs
             Row(
