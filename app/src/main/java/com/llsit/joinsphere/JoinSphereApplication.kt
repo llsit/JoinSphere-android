@@ -13,6 +13,7 @@ import com.llsit.joinsphere.feature.myevents.di.myEventsModule
 import com.llsit.joinsphere.feature.notifications.di.notificationsModule
 import com.llsit.joinsphere.feature.onboarding.di.onboardingModule
 import com.llsit.joinsphere.feature.profile.di.profileModule
+import com.llsit.joinsphere.feature.search.di.searchModule
 import com.llsit.joinsphere.feature.settings.di.settingsModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -42,7 +43,8 @@ class JoinSphereApplication : Application() {
                 discoverModule,
                 eventDetailModule,
                 myEventsModule,
-                notificationsModule
+                notificationsModule,
+                searchModule
             )
         }
     }

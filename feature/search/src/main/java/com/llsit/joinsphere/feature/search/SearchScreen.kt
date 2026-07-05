@@ -59,7 +59,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.llsit.joinsphere.core.model.Category
+import org.koin.androidx.compose.koinViewModel
 
 data class SearchEvent(
     val id: Int,
@@ -191,18 +194,25 @@ val ALL_EVENTS = listOf(
     )
 )
 
-val CATEGORIES = listOf("All", "Sports", "Music", "Food & Drink", "Arts", "Outdoors", "Tech")
 val PRICE_OPTS = listOf("Any price", "Free only", "Paid only")
 val SORT_OPTS = listOf("Relevance", "Date", "Rating", "Attendees")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(onEventClick: (String, String?, String?) -> Unit = { _, _, _ -> }) {
+fun SearchScreen(
+    onEventClick: (String, String?, String?) -> Unit = { _, _, _ -> },
+    viewModel: SearchViewModel = koinViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("All") }
     var priceFilter by remember { mutableStateOf("Any price") }
     var sortOrder by remember { mutableStateOf("Relevance") }
     var showSoloFriendlyOnly by remember { mutableStateOf(false) }
+
+    val categories = remember(uiState.categories) {
+        listOf(Category("all", "All", "🌎")) + uiState.categories
+    }
 
     val filteredEvents = remember(query, category, priceFilter, showSoloFriendlyOnly) {
         ALL_EVENTS.filter { ev ->
@@ -341,10 +351,10 @@ fun SearchScreen(onEventClick: (String, String?, String?) -> Unit = { _, _, _ ->
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(bottom = 14.dp)
         ) {
-            items(CATEGORIES) { c ->
-                val isSelected = category == c
+            items(categories) { c ->
+                val isSelected = category == c.label
                 Surface(
-                    onClick = { category = c },
+                    onClick = { category = c.label },
                     shape = RoundedCornerShape(20.dp),
                     color = if (isSelected) Color(0xFF0D0F14) else Color.Transparent,
                     border = BorderStroke(
@@ -353,7 +363,7 @@ fun SearchScreen(onEventClick: (String, String?, String?) -> Unit = { _, _, _ ->
                     )
                 ) {
                     Text(
-                        text = c,
+                        text = if (c.id == "all") c.label else "${c.emoji} ${c.label}",
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
@@ -617,5 +627,5 @@ fun DropDownFilter(
 @Preview(showBackground = true)
 @Composable
 fun SearchScreenPreview() {
-    SearchScreen()
+    SearchScreen(onEventClick = { _, _, _ -> })
 }
