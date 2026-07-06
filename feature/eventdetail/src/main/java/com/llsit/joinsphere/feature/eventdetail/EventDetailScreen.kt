@@ -29,13 +29,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.llsit.joinsphere.feature.eventdetail.state.EventDetailUiState
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -83,6 +84,29 @@ fun EventDetailScreen(
         viewModel.loadEventDetail(eventId)
     }
 
+    EventDetailScreenContent(
+        uiState = uiState,
+        eventId = eventId,
+        initialTitle = initialTitle,
+        initialImage = initialImage,
+        onBackClick = onBackClick,
+        onChatClick = onChatClick,
+        onJoinClick = { viewModel.joinEvent() },
+        onCancelJoinClick = { viewModel.cancelJoinEvent() }
+    )
+}
+
+@Composable
+fun EventDetailScreenContent(
+    uiState: EventDetailUiState,
+    eventId: String,
+    initialTitle: String? = null,
+    initialImage: String? = null,
+    onBackClick: () -> Unit = {},
+    onChatClick: (String) -> Unit = {},
+    onJoinClick: () -> Unit = {},
+    onCancelJoinClick: () -> Unit = {}
+) {
     var isLiked by remember { mutableStateOf(false) }
     var showCancelDialog by remember { mutableStateOf(false) }
     var showJoinDialog by remember { mutableStateOf(false) }
@@ -124,7 +148,7 @@ fun EventDetailScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            viewModel.joinEvent()
+                            onJoinClick()
                             showJoinDialog = false
                         }
                     ) {
@@ -147,7 +171,7 @@ fun EventDetailScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            viewModel.cancelJoinEvent()
+                            onCancelJoinClick()
                             showCancelDialog = false
                         }
                     ) {
@@ -203,7 +227,7 @@ fun EventDetailScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 48.dp, start = 20.dp, end = 20.dp),
+                            .padding(top = 24.dp, start = 20.dp, end = 20.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -242,9 +266,9 @@ fun EventDetailScreen(
                                 )
                             ) {
                                 Icon(
-                                    imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = "Like",
-                                    tint = if (isLiked) Color.Red else Color.White
+                                    imageVector = if (isLiked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                                    contentDescription = "Save",
+                                    tint = if (isLiked) Color(0xFF1757F0) else Color.White
                                 )
                             }
                         }
@@ -605,5 +629,8 @@ fun EventDetailScreen(
 @Preview(showBackground = true)
 @Composable
 fun EventDetailScreenPreview() {
-    EventDetailScreen(eventId = "preview_id")
+    EventDetailScreenContent(
+        uiState = EventDetailUiState(),
+        eventId = "preview_id"
+    )
 }

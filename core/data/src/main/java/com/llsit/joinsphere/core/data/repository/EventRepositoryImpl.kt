@@ -6,6 +6,7 @@ import com.llsit.joinsphere.core.database.entity.toExternalModel
 import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.model.Category
 import com.llsit.joinsphere.core.model.DiscoverFeedsResponse
+import com.llsit.joinsphere.core.model.event.AttendingEvent
 import com.llsit.joinsphere.core.model.event.EventAttendeeDto
 import com.llsit.joinsphere.core.model.event.EventDto
 import io.github.jan.supabase.SupabaseClient
@@ -99,6 +100,11 @@ class EventRepositoryImpl(
                 eq("creator_id", userId)
             }
         }.decodeList<EventDto>()
+    }
+
+    override suspend fun getUpcomingEvents(): Result<List<AttendingEvent>> = runCatching {
+        val response = supabase.functions.invoke("get-upcoming-events")
+        response.body<List<AttendingEvent>>()
     }
 
     override suspend fun joinEvent(eventId: String, userId: String): Result<Unit> = runCatching {

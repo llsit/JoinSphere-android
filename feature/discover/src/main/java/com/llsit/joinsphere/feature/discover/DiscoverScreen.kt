@@ -31,8 +31,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Star
@@ -389,7 +389,7 @@ fun FeaturedEventCard(
                         )
                 )
 
-                // Like Button
+                // Save Button
                 Surface(
                     onClick = onLikeToggle,
                     shape = CircleShape,
@@ -402,9 +402,9 @@ fun FeaturedEventCard(
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Like",
-                            tint = if (isLiked) Color(0xFFDC2626) else Color(0xFF737880),
+                            imageVector = if (isLiked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                            contentDescription = "Save",
+                            tint = if (isLiked) Color(0xFF1757F0) else Color(0xFF737880),
                             modifier = Modifier.size(16.dp)
                         )
                     }

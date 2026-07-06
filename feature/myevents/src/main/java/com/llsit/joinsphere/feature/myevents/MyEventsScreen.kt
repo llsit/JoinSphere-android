@@ -5,16 +5,46 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.outlined.Group
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -35,15 +65,22 @@ import com.llsit.joinsphere.core.design.ButtonSize
 import com.llsit.joinsphere.core.design.ButtonVariant
 import com.llsit.joinsphere.core.design.Card
 import com.llsit.joinsphere.core.design.Progress
+import com.llsit.joinsphere.core.model.event.AttendingEvent
 import com.llsit.joinsphere.core.model.event.EventDto
+import com.llsit.joinsphere.feature.myevents.state.EventState
 import org.koin.androidx.compose.koinViewModel
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import kotlin.time.ExperimentalTime
 
 enum class MyEventsTab(val label: String) {
     Upcoming("Upcoming"),
     Hosting("Hosting"),
+    Saved("Saved"),
     Past("Past")
 }
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun MyEventsScreen(
     onEventClick: (String, String?, String?) -> Unit = { _, _, _ -> },
@@ -123,26 +160,6 @@ fun MyEventsScreen(
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (isSelected) Color(0xFF0D0F14) else Color(0xFF737880)
                             )
-                            if (tab == MyEventsTab.Upcoming) {
-                                val totalUnread = MOCK_ATTENDING.sumOf { it.unread }
-                                if (totalUnread > 0) {
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Box(
-                                        modifier = Modifier
-                                            .size(16.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.primary),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = totalUnread.toString(),
-                                            color = Color.White,
-                                            fontSize = 9.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -157,14 +174,48 @@ fun MyEventsScreen(
         ) {
             when (selectedTab) {
                 MyEventsTab.Upcoming -> {
-                    items(MOCK_ATTENDING) { event ->
-                        UpcomingEventCard(
-                            event = event,
-                            onDetailsClick = { onEventClick(event.id.toString(), event.title, event.image) },
-                            onChatClick = { onChatClick(event.id.toString()) }
-                        )
+                    if (uiState.isLoading && uiState.upcomingEvents.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    } else if (uiState.upcomingEvents.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No upcoming events",
+                                    color = Color(0xFF737880),
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    } else {
+                        items(uiState.upcomingEvents) { event ->
+                            UpcomingEventCard(
+                                event = event,
+                                onDetailsClick = {
+                                    onEventClick(
+                                        event.id,
+                                        event.title,
+                                        event.coverImage
+                                    )
+                                },
+                            ) { onChatClick(event.id) }
+                        }
                     }
                 }
+
                 MyEventsTab.Hosting -> {
                     item {
                         CreateEventButton(onClick = onCreateEventClick)
@@ -210,6 +261,7 @@ fun MyEventsScreen(
                         }
                     }
                 }
+
                 MyEventsTab.Past -> {
                     item {
                         Text(
@@ -223,11 +275,62 @@ fun MyEventsScreen(
                         PastEventCard(event = event)
                     }
                 }
+
+                MyEventsTab.Saved -> {
+                    item {
+                        Text(
+                            text = "${MOCK_SAVED.size} saved events",
+                            fontSize = 13.sp,
+                            color = Color(0xFF737880),
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                    }
+                    items(MOCK_SAVED) { event ->
+                        // Using mock data version for Saved tab for now
+                        val attendingEvent = remember(event) {
+                            AttendingEvent(
+                                id = event.id.toString(),
+                                title = event.title,
+                                coverImage = event.image,
+                                categoryId = event.category,
+                                hostName = event.hostName,
+                                hostAvatar = event.hostAvatar,
+                                address = event.location,
+                                attendeeCount = event.attendees,
+                                maxAttendeeCount = event.maxAttendees,
+                                isFree = event.price == "Free",
+                                price = if (event.price == "Free") 0.0 else event.price.replace(
+                                    "$",
+                                    ""
+                                ).toDoubleOrNull() ?: 0.0,
+                                startTimestamp = kotlinx.datetime.Instant.fromEpochMilliseconds(
+                                    java.time.OffsetDateTime.now(
+                                        java.time.ZoneOffset.UTC
+                                    ).toInstant().toEpochMilli()
+                                ),
+                                endTimestamp = null,
+                                unreadCount = event.unread,
+                                eventState = EventState.UPCOMING
+                            )
+                        }
+                        UpcomingEventCard(
+                            event = attendingEvent,
+                            onDetailsClick = {
+                                onEventClick(
+                                    event.id.toString(),
+                                    event.title,
+                                    event.image
+                                )
+                            },
+                        ) { onChatClick(event.id.toString()) }
+                    }
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun UpcomingEventCard(
     event: AttendingEvent,
@@ -237,6 +340,20 @@ fun UpcomingEventCard(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "scale")
+
+    val dateFormatter =
+        remember { DateTimeFormatter.ofPattern("EEE, MMM dd").withZone(ZoneId.systemDefault()) }
+    val timeFormatter =
+        remember { DateTimeFormatter.ofPattern("h:mm a").withZone(ZoneId.systemDefault()) }
+
+    val dateText = remember(event.startTimestamp) {
+        val javaInstant = java.time.Instant.ofEpochMilli(event.startTimestamp.toEpochMilliseconds())
+        dateFormatter.format(javaInstant)
+    }
+    val timeText = remember(event.startTimestamp) {
+        val javaInstant = java.time.Instant.ofEpochMilli(event.startTimestamp.toEpochMilliseconds())
+        timeFormatter.format(javaInstant)
+    }
 
     Card(
         modifier = Modifier
@@ -255,7 +372,7 @@ fun UpcomingEventCard(
             // Image
             Box(modifier = Modifier.height(128.dp)) {
                 AsyncImage(
-                    model = event.image,
+                    model = event.coverImage,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -272,14 +389,23 @@ fun UpcomingEventCard(
                 )
                 // Status Badge
                 Surface(
-                    color = if (event.status == "confirmed") Color(0xE616A34A) else Color(0xE6F59E0B),
+                    color = when (event.eventState) {
+                        EventState.LIVE -> Color(0xFFDC2626) // Red for live
+                        EventState.STARTING_SOON -> Color(0xFFF59E0B) // Amber
+                        else -> Color(0xFF16A34A) // Green for upcoming
+                    },
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .padding(top = 12.dp, end = 12.dp)
                         .align(Alignment.TopEnd)
                 ) {
                     Text(
-                        text = if (event.status == "confirmed") "✓ Confirmed" else "⏳ Pending",
+                        text = when (event.eventState) {
+                            EventState.LIVE -> "● LIVE"
+                            EventState.STARTING_SOON -> "⏳ Starting soon"
+                            EventState.ENDED -> "Ended"
+                            else -> "✓ Confirmed"
+                        },
                         color = Color.White,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -314,7 +440,7 @@ fun UpcomingEventCard(
                         )
                         Spacer(modifier = Modifier.width(5.dp))
                         Text(
-                            text = "${event.date} · ${event.time}",
+                            text = "$dateText · $timeText",
                             fontSize = 13.sp,
                             color = Color(0xFF737880)
                         )
@@ -328,7 +454,7 @@ fun UpcomingEventCard(
                         )
                         Spacer(modifier = Modifier.width(5.dp))
                         Text(
-                            text = event.location,
+                            text = event.address,
                             fontSize = 13.sp,
                             color = Color(0xFF737880),
                             maxLines = 1,
@@ -368,8 +494,9 @@ fun UpcomingEventCard(
                             tint = Color(0xFF737880)
                         )
                         Spacer(modifier = Modifier.width(5.dp))
+                        val maxText = event.maxAttendeeCount?.let { "/$it" } ?: ""
                         Text(
-                            text = "${event.attendees}/${event.maxAttendees}",
+                            text = "${event.attendeeCount}$maxText",
                             fontSize = 13.sp,
                             color = Color(0xFF737880)
                         )
@@ -378,14 +505,21 @@ fun UpcomingEventCard(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
                     Button(
                         onClick = onDetailsClick,
                         modifier = Modifier.weight(1f),
                         variant = ButtonVariant.Secondary,
                         size = ButtonSize.Sm
                     ) {
-                        Text(text = "View details", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            text = "View details",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
 
                     Button(
@@ -402,9 +536,13 @@ fun UpcomingEventCard(
                                     modifier = Modifier.size(15.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = "Chat", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    text = "Chat",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             }
-                            if (event.unread > 0) {
+                            if (event.unreadCount > 0) {
                                 Box(
                                     modifier = Modifier
                                         .size(16.dp)
@@ -414,7 +552,7 @@ fun UpcomingEventCard(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = event.unread.toString(),
+                                        text = event.unreadCount.toString(),
                                         color = Color.White,
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.Bold
@@ -573,7 +711,8 @@ fun HostingEventCard(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Progress(
-                    value = (event.attendeeCount ?: 0).toFloat() / (event.maxAttendees ?: 1).coerceAtLeast(1),
+                    value = (event.attendeeCount ?: 0).toFloat() / (event.maxAttendees
+                        ?: 1).coerceAtLeast(1),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -664,7 +803,7 @@ fun CreateEventButton(onClick: () -> Unit) {
 }
 
 // Mock Data
-data class AttendingEvent(
+data class AttendingEventMock(
     val id: Int,
     val title: String,
     val category: String,
@@ -679,57 +818,6 @@ data class AttendingEvent(
     val hostAvatar: String,
     val hostName: String,
     val unread: Int
-)
-
-val MOCK_ATTENDING = listOf(
-    AttendingEvent(
-        id = 1,
-        title = "Golden Gate Morning Run",
-        category = "Sports",
-        date = "Sat, Jun 14",
-        time = "7:00 AM",
-        location = "Golden Gate Park",
-        attendees = 34,
-        maxAttendees = 50,
-        price = "Free",
-        status = "confirmed",
-        image = "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&h=280&fit=crop&auto=format",
-        hostAvatar = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=60&h=80&fit=crop&auto=format",
-        hostName = "Sarah Chen",
-        unread = 12
-    ),
-    AttendingEvent(
-        id = 2,
-        title = "Rooftop Jazz & Wine Night",
-        category = "Music",
-        date = "Fri, Jun 13",
-        time = "7:30 PM",
-        location = "SoMa Rooftop",
-        attendees = 82,
-        maxAttendees = 100,
-        price = "$25",
-        status = "confirmed",
-        image = "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=400&h=280&fit=crop&auto=format",
-        hostAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=60&h=80&fit=crop&auto=format",
-        hostName = "Marcus Wong",
-        unread = 0
-    ),
-    AttendingEvent(
-        id = 3,
-        title = "Sunset Yoga on the Beach",
-        category = "Outdoors",
-        date = "Wed, Jun 18",
-        time = "5:30 PM",
-        location = "Ocean Beach",
-        attendees = 18,
-        maxAttendees = 30,
-        price = "$10",
-        status = "pending",
-        image = "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=280&fit=crop&auto=format",
-        hostAvatar = "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=60&h=60&fit=crop&auto=format",
-        hostName = "Priya Nair",
-        unread = 3
-    )
 )
 
 data class PastEvent(
@@ -760,6 +848,25 @@ val MOCK_PAST = listOf(
         attendees = 22,
         image = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=200&fit=crop&auto=format",
         rating = 4
+    )
+)
+
+val MOCK_SAVED = listOf(
+    AttendingEventMock(
+        id = 10,
+        title = "Art Gallery Exhibition",
+        category = "Arts",
+        date = "Sun, Jul 20",
+        time = "10:00 AM",
+        location = "Modern Art Museum",
+        attendees = 12,
+        maxAttendees = 100,
+        price = "Free",
+        status = "confirmed",
+        image = "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=400&h=280&fit=crop&auto=format",
+        hostAvatar = "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=60&h=60&fit=crop&auto=format",
+        hostName = "Elena Petrova",
+        unread = 0
     )
 )
 

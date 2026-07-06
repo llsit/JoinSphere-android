@@ -22,6 +22,21 @@ class MyEventsViewModel(
 
     init {
         loadHostingEvents()
+        loadUpcomingEvents()
+    }
+
+    fun loadUpcomingEvents() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            eventRepository.getUpcomingEvents()
+                .onSuccess { events ->
+                    _uiState.update { it.copy(upcomingEvents = events, isLoading = false) }
+                }
+                .onFailure { error ->
+                    Log.e("MyEventsViewModel", "Error loading upcoming events: ${error.message}")
+                    _uiState.update { it.copy(error = error.message, isLoading = false) }
+                }
+        }
     }
 
     fun loadHostingEvents() {
