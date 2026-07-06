@@ -55,7 +55,8 @@ class EventRepositoryImpl(
     override suspend fun getDiscoverFeeds(
         userLat: Double,
         userLng: Double,
-        radiusMeters: Double
+        radiusMeters: Double,
+        categoryId: String?
     ): Result<DiscoverFeedsResponse> = runCatching {
         val response = supabase.functions.invoke(
             "get-discover-feeds",
@@ -63,6 +64,9 @@ class EventRepositoryImpl(
                 put("user_lat", userLat)
                 put("user_lng", userLng)
                 put("radius_m", radiusMeters)
+                if (categoryId != null && categoryId != "all") {
+                    put("category_id", categoryId)
+                }
             }
         )
         response.body<DiscoverFeedsResponse>()

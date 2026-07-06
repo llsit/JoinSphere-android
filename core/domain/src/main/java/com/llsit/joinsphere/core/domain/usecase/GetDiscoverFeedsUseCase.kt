@@ -9,8 +9,9 @@ class GetDiscoverFeedsUseCase(
     suspend operator fun invoke(
         lat: Double,
         lng: Double,
-        radius: Double
+        radius: Double,
+        categoryId: String? = null
     ): Result<DiscoverFeedsResponse> {
-        return eventRepository.getDiscoverFeeds(lat, lng, radius)
+        return eventRepository.getDiscoverFeeds(lat, lng, radius, categoryId)
     }
 }

@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 
 data class DiscoverUiState(
     val categories: List<Category> = emptyList(),
+    val selectedCategoryId: String = "all",
     val trending: List<EventNetworkModel> = emptyList(),
     val thisWeek: List<EventNetworkModel> = emptyList(),
     val address: String = "ดึงข้อมูลตำแหน่ง...",
@@ -26,6 +27,7 @@ data class DiscoverUiState(
 
 sealed interface DiscoverIntent {
     data object Refresh : DiscoverIntent
+    data class SelectCategory(val categoryId: String) : DiscoverIntent
 }
 
 class DiscoverViewModel(
@@ -53,6 +55,10 @@ class DiscoverViewModel(
     fun onIntent(intent: DiscoverIntent) {
         when (intent) {
             DiscoverIntent.Refresh -> fetchFeeds()
+            is DiscoverIntent.SelectCategory -> {
+                _uiState.update { it.copy(selectedCategoryId = intent.categoryId) }
+                fetchFeeds()
+            }
         }
     }
 
@@ -66,7 +72,8 @@ class DiscoverViewModel(
             getDiscoverFeedsUseCase(
                 lat = userLocation?.lat ?: 13.7563,
                 lng = userLocation?.lng ?: 100.5018,
-                radius = 20000.0
+                radius = 20000.0,
+                categoryId = _uiState.value.selectedCategoryId
             )
                 .onSuccess { response ->
                     _uiState.update {

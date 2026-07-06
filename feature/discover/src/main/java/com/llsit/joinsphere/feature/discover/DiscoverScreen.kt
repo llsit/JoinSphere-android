@@ -47,7 +47,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -79,7 +78,6 @@ fun DiscoverScreen(
     onSearchClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var activeCategory by remember { mutableStateOf("all") }
     val liked = remember { mutableStateListOf<String>() }
     val context = LocalContext.current
 
@@ -218,9 +216,9 @@ fun DiscoverScreen(
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
             items(categories) { cat ->
-                val active = activeCategory == cat.id
+                val active = uiState.selectedCategoryId == cat.id
                 Surface(
-                    onClick = { activeCategory = cat.id },
+                    onClick = { viewModel.onIntent(DiscoverIntent.SelectCategory(cat.id)) },
                     color = if (active) Color(0xFF0D0F14) else Color(0xFFF4F5F8),
                     shape = RoundedCornerShape(20.dp)
                 ) {

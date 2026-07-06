@@ -18,7 +18,8 @@ interface EventRepository {
     suspend fun getDiscoverFeeds(
         userLat: Double,
         userLng: Double,
-        radiusMeters: Double = 20000.0
+        radiusMeters: Double = 20000.0,
+        categoryId: String? = null
     ): Result<DiscoverFeedsResponse>
 
     fun getCategories(): Flow<List<Category>>
