@@ -29,8 +29,16 @@ class MyEventsViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             getUpcomingEventsUseCase()
-                .onSuccess { events ->
-                    _uiState.update { it.copy(upcomingEvents = events, isLoading = false) }
+                .onSuccess { response ->
+                    _uiState.update { 
+                        it.copy(
+                            todayEvents = response.today,
+                            tomorrowEvents = response.tomorrow,
+                            thisWeekEvents = response.thisWeek,
+                            laterEvents = response.later,
+                            isLoading = false
+                        ) 
+                    }
                 }
                 .onFailure { error ->
                     Log.e("MyEventsViewModel", "Error loading upcoming events: ${error.message}")

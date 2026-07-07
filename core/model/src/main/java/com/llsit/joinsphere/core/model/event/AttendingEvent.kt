@@ -2,9 +2,10 @@ package com.llsit.joinsphere.core.model.event
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
+import kotlin.time.ExperimentalTime
 
 @Serializable
-data class AttendingEvent(
+data class AttendingEvent @OptIn(ExperimentalTime::class) constructor(
     val id: String,
     val title: String,
     val coverImage: String,

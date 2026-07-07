@@ -174,7 +174,7 @@ fun MyEventsScreen(
         ) {
             when (selectedTab) {
                 MyEventsTab.Upcoming -> {
-                    if (uiState.isLoading && uiState.upcomingEvents.isEmpty()) {
+                    if (uiState.isLoading && uiState.todayEvents.isEmpty() && uiState.tomorrowEvents.isEmpty() && uiState.thisWeekEvents.isEmpty() && uiState.laterEvents.isEmpty()) {
                         item {
                             Box(
                                 modifier = Modifier
@@ -185,7 +185,7 @@ fun MyEventsScreen(
                                 CircularProgressIndicator()
                             }
                         }
-                    } else if (uiState.upcomingEvents.isEmpty()) {
+                    } else if (uiState.todayEvents.isEmpty() && uiState.tomorrowEvents.isEmpty() && uiState.thisWeekEvents.isEmpty() && uiState.laterEvents.isEmpty()) {
                         item {
                             Box(
                                 modifier = Modifier
@@ -201,17 +201,60 @@ fun MyEventsScreen(
                             }
                         }
                     } else {
-                        items(uiState.upcomingEvents) { event ->
-                            UpcomingEventCard(
-                                event = event,
-                                onDetailsClick = {
-                                    onEventClick(
-                                        event.id,
-                                        event.title,
-                                        event.coverImage
-                                    )
-                                },
-                            ) { onChatClick(event.id) }
+                        // Today
+                        if (uiState.todayEvents.isNotEmpty()) {
+                            item { SectionHeader("Today") }
+                            items(uiState.todayEvents) { event ->
+                                UpcomingEventCard(
+                                    event = event,
+                                    onDetailsClick = {
+                                        onEventClick(event.id, event.title, event.coverImage)
+                                    },
+                                    onChatClick = { onChatClick(event.id) }
+                                )
+                            }
+                        }
+
+                        // Tomorrow
+                        if (uiState.tomorrowEvents.isNotEmpty()) {
+                            item { SectionHeader("Tomorrow") }
+                            items(uiState.tomorrowEvents) { event ->
+                                UpcomingEventCard(
+                                    event = event,
+                                    onDetailsClick = {
+                                        onEventClick(event.id, event.title, event.coverImage)
+                                    },
+                                    onChatClick = { onChatClick(event.id) }
+                                )
+                            }
+                        }
+
+                        // This Week
+                        if (uiState.thisWeekEvents.isNotEmpty()) {
+                            item { SectionHeader("This week") }
+                            items(uiState.thisWeekEvents) { event ->
+                                UpcomingEventCard(
+                                    event = event,
+                                    onDetailsClick = {
+                                        onEventClick(event.id, event.title, event.coverImage)
+                                    },
+                                    onChatClick = { onChatClick(event.id) }
+                                )
+                            }
+                        }
+
+                        // Later
+                        if (uiState.laterEvents.isNotEmpty()) {
+                            item { SectionHeader("Later") }
+                            items(uiState.laterEvents) { event ->
+                                UpcomingEventCard(
+                                    event = event,
+                                    onDetailsClick = {
+                                        onEventClick(event.id, event.title, event.coverImage)
+                                    },
+                                    onChatClick = { onChatClick(event.id) }
+                                )
+                            }
                         }
                     }
                 }
@@ -328,6 +371,17 @@ fun MyEventsScreen(
             }
         }
     }
+}
+
+@Composable
+fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color(0xFF0D0F14),
+        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+    )
 }
 
 @OptIn(ExperimentalTime::class)
