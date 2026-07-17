@@ -10,5 +10,5 @@ import org.koin.dsl.module
 val discoverModule = module {
     factoryOf(::GetCurrentLocationUseCase)
     factoryOf(::GetDiscoverFeedsUseCase)
-    viewModel { DiscoverViewModel(get(), get(), get()) }
+    viewModel { DiscoverViewModel(get(), get(), get(), get()) }
 }

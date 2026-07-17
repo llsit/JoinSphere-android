@@ -6,14 +6,15 @@ import com.llsit.joinsphere.core.database.entity.toExternalModel
 import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.model.Category
 import com.llsit.joinsphere.core.model.DiscoverFeedsResponse
-import com.llsit.joinsphere.core.model.event.AttendingEvent
 import com.llsit.joinsphere.core.model.event.EventAttendeeDto
 import com.llsit.joinsphere.core.model.event.EventDto
 import com.llsit.joinsphere.core.model.event.MyEventsResponse
+import com.llsit.joinsphere.core.model.event.SavedEventDto
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.functions.functions
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.storage.storage
 import io.ktor.client.call.body
 import kotlinx.coroutines.Dispatchers
@@ -108,27 +109,38 @@ class EventRepositoryImpl(
         response.body<MyEventsResponse>()
     }
 
+    override suspend fun getSavedEvents(userId: String): Result<List<SavedEventDto>> = runCatching {
+        supabase.postgrest.rpc(
+            "get_saved_events",
+            buildJsonObject {
+                put("p_user_id", userId)
+            }
+        ).decodeList<SavedEventDto>()
+    }
+
     override suspend fun joinEvent(eventId: String, userId: String): Result<Unit> = runCatching {
         val attendee = EventAttendeeDto(eventId = eventId, userId = userId)
         supabase.from("event_attendees").insert(attendee)
     }
 
-    override suspend fun cancelJoinEvent(eventId: String, userId: String): Result<Unit> = runCatching {
-        supabase.from("event_attendees").delete {
-            filter {
-                eq("event_id", eventId)
-                eq("user_id", userId)
+    override suspend fun cancelJoinEvent(eventId: String, userId: String): Result<Unit> =
+        runCatching {
+            supabase.from("event_attendees").delete {
+                filter {
+                    eq("event_id", eventId)
+                    eq("user_id", userId)
+                }
             }
         }
-    }
 
-    override suspend fun isUserAttending(eventId: String, userId: String): Result<Boolean> = runCatching {
-        val response = supabase.from("event_attendees").select {
-            filter {
-                eq("event_id", eventId)
-                eq("user_id", userId)
-            }
-        }.decodeList<EventAttendeeDto>()
-        response.isNotEmpty()
-    }
+    override suspend fun isUserAttending(eventId: String, userId: String): Result<Boolean> =
+        runCatching {
+            val response = supabase.from("event_attendees").select {
+                filter {
+                    eq("event_id", eventId)
+                    eq("user_id", userId)
+                }
+            }.decodeList<EventAttendeeDto>()
+            response.isNotEmpty()
+        }
 }

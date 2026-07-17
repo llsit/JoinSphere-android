@@ -8,11 +8,13 @@ import com.llsit.joinsphere.core.data.local.PreferencesDataSource
 import com.llsit.joinsphere.core.data.local.SupabaseSessionManager
 import com.llsit.joinsphere.core.data.repository.AuthRepositoryImpl
 import com.llsit.joinsphere.core.data.repository.EventRepositoryImpl
+import com.llsit.joinsphere.core.data.repository.FavoriteRepositoryImpl
 import com.llsit.joinsphere.core.data.repository.LocationRepositoryImpl
 import com.llsit.joinsphere.core.data.repository.OfflineUserDataRepository
 import com.llsit.joinsphere.core.data.repository.ProfileRepositoryImpl
 import com.llsit.joinsphere.core.domain.repository.AuthRepository
 import com.llsit.joinsphere.core.domain.repository.EventRepository
+import com.llsit.joinsphere.core.domain.repository.FavoriteRepository
 import com.llsit.joinsphere.core.domain.repository.LocationRepository
 import com.llsit.joinsphere.core.domain.repository.ProfileRepository
 import com.llsit.joinsphere.core.domain.repository.UserDataRepository
@@ -43,8 +45,6 @@ val dataModule = module {
             install(Storage)
         }
     }
-    // Add a custom Json instance for general use if needed, 
-    // though Supabase-kt usually handles this internally.
     single {
         kotlinx.serialization.json.Json {
             ignoreUnknownKeys = true
@@ -60,4 +60,5 @@ val dataModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get()) }
     single<ProfileRepository> { ProfileRepositoryImpl(get()) }
     single<EventRepository> { EventRepositoryImpl(get(), get()) }
+    single<FavoriteRepository> { FavoriteRepositoryImpl(get()) }
 }

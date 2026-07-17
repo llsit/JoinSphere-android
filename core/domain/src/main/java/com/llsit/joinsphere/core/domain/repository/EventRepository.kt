@@ -6,6 +6,7 @@ import com.llsit.joinsphere.core.model.event.AttendingEvent
 import com.llsit.joinsphere.core.model.event.EventAttendeeDto
 import com.llsit.joinsphere.core.model.event.EventDto
 import com.llsit.joinsphere.core.model.event.MyEventsResponse
+import com.llsit.joinsphere.core.model.event.SavedEventDto
 import kotlinx.coroutines.flow.Flow
 
 interface EventRepository {
@@ -28,6 +29,7 @@ interface EventRepository {
     suspend fun syncCategories(): Result<Unit>
     suspend fun getHostingEvents(userId: String): Result<List<EventDto>>
     suspend fun getUpcomingEvents(): Result<MyEventsResponse>
+    suspend fun getSavedEvents(userId: String): Result<List<SavedEventDto>>
     suspend fun joinEvent(eventId: String, userId: String): Result<Unit>
     suspend fun cancelJoinEvent(eventId: String, userId: String): Result<Unit>
     suspend fun isUserAttending(eventId: String, userId: String): Result<Boolean>

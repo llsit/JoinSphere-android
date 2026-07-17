@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.llsit.joinsphere.core.domain.usecase.GetHostingEventsUseCase
+import com.llsit.joinsphere.core.domain.usecase.GetSavedEventsUseCase
 import com.llsit.joinsphere.core.domain.usecase.GetUpcomingEventsUseCase
 import com.llsit.joinsphere.feature.myevents.state.MyEventsUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,8 @@ import kotlinx.coroutines.launch
 
 class MyEventsViewModel(
     private val getHostingEventsUseCase: GetHostingEventsUseCase,
-    private val getUpcomingEventsUseCase: GetUpcomingEventsUseCase
+    private val getUpcomingEventsUseCase: GetUpcomingEventsUseCase,
+    private val getSavedEventsUseCase: GetSavedEventsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MyEventsUiState())
@@ -23,6 +25,7 @@ class MyEventsViewModel(
     init {
         loadHostingEvents()
         loadUpcomingEvents()
+        loadSavedEvents()
     }
 
     fun loadUpcomingEvents() {
@@ -56,6 +59,20 @@ class MyEventsViewModel(
                 }
                 .onFailure { error ->
                     Log.e("MyEventsViewModel", "MyEventsViewModel Error : ${error.message}")
+                    _uiState.update { it.copy(error = error.message, isLoading = false) }
+                }
+        }
+    }
+
+    fun loadSavedEvents() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            getSavedEventsUseCase()
+                .onSuccess { events ->
+                    _uiState.update { it.copy(savedEvents = events, isLoading = false) }
+                }
+                .onFailure { error ->
+                    Log.e("MyEventsViewModel", "Error loading saved events: ${error.message}")
                     _uiState.update { it.copy(error = error.message, isLoading = false) }
                 }
         }

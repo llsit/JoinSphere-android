@@ -92,7 +92,8 @@ fun EventDetailScreen(
         onBackClick = onBackClick,
         onChatClick = onChatClick,
         onJoinClick = { viewModel.joinEvent() },
-        onCancelJoinClick = { viewModel.cancelJoinEvent() }
+        onCancelJoinClick = { viewModel.cancelJoinEvent() },
+        onFavoriteClick = { viewModel.toggleFavorite() }
     )
 }
 
@@ -105,12 +106,13 @@ fun EventDetailScreenContent(
     onBackClick: () -> Unit = {},
     onChatClick: (String) -> Unit = {},
     onJoinClick: () -> Unit = {},
-    onCancelJoinClick: () -> Unit = {}
+    onCancelJoinClick: () -> Unit = {},
+    onFavoriteClick: () -> Unit = {}
 ) {
-    var isLiked by remember { mutableStateOf(false) }
     var showCancelDialog by remember { mutableStateOf(false) }
     var showJoinDialog by remember { mutableStateOf(false) }
 
+    val isLiked = uiState.isFavorite
     val event = uiState.event
     val host = uiState.host
 
@@ -259,7 +261,7 @@ fun EventDetailScreenContent(
                                 )
                             }
                             IconButton(
-                                onClick = { isLiked = !isLiked },
+                                onClick = onFavoriteClick,
                                 modifier = Modifier.background(
                                     Color.White.copy(alpha = 0.2f),
                                     CircleShape

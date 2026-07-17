@@ -67,6 +67,7 @@ import com.llsit.joinsphere.core.design.Card
 import com.llsit.joinsphere.core.design.Progress
 import com.llsit.joinsphere.core.model.event.AttendingEvent
 import com.llsit.joinsphere.core.model.event.EventDto
+import com.llsit.joinsphere.core.model.event.SavedEventDto
 import com.llsit.joinsphere.feature.myevents.state.EventState
 import org.koin.androidx.compose.koinViewModel
 import java.time.ZoneId
@@ -320,52 +321,53 @@ fun MyEventsScreen(
                 }
 
                 MyEventsTab.Saved -> {
-                    item {
-                        Text(
-                            text = "${MOCK_SAVED.size} saved events",
-                            fontSize = 13.sp,
-                            color = Color(0xFF737880),
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                    }
-                    items(MOCK_SAVED) { event ->
-                        // Using mock data version for Saved tab for now
-                        val attendingEvent = remember(event) {
-                            AttendingEvent(
-                                id = event.id.toString(),
-                                title = event.title,
-                                coverImage = event.image,
-                                categoryId = event.category,
-                                hostName = event.hostName,
-                                hostAvatar = event.hostAvatar,
-                                address = event.location,
-                                attendeeCount = event.attendees,
-                                maxAttendeeCount = event.maxAttendees,
-                                isFree = event.price == "Free",
-                                price = if (event.price == "Free") 0.0 else event.price.replace(
-                                    "$",
-                                    ""
-                                ).toDoubleOrNull() ?: 0.0,
-                                startTimestamp = kotlinx.datetime.Instant.fromEpochMilliseconds(
-                                    java.time.OffsetDateTime.now(
-                                        java.time.ZoneOffset.UTC
-                                    ).toInstant().toEpochMilli()
-                                ),
-                                endTimestamp = null,
-                                unreadCount = event.unread,
-                                eventState = EventState.UPCOMING
+                    if (uiState.isLoading && uiState.savedEvents.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    } else if (uiState.savedEvents.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No saved events",
+                                    color = Color(0xFF737880),
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    } else {
+                        item {
+                            Text(
+                                text = "${uiState.savedEvents.size} saved events",
+                                fontSize = 13.sp,
+                                color = Color(0xFF737880),
+                                modifier = Modifier.padding(bottom = 4.dp)
                             )
                         }
-                        UpcomingEventCard(
-                            event = attendingEvent,
-                            onDetailsClick = {
-                                onEventClick(
-                                    event.id.toString(),
-                                    event.title,
-                                    event.image
-                                )
-                            },
-                        ) { onChatClick(event.id.toString()) }
+                        items(uiState.savedEvents) { event ->
+                            SavedEventCard(
+                                event = event,
+                                onDetailsClick = {
+                                    onEventClick(
+                                        event.id,
+                                        event.title,
+                                        event.coverImageUrl
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -621,6 +623,149 @@ fun UpcomingEventCard(
     }
 }
 
+@OptIn(ExperimentalTime::class)
+@Composable
+fun SavedEventCard(
+    event: SavedEventDto,
+    onDetailsClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "scale")
+
+    val dateFormatter =
+        remember { DateTimeFormatter.ofPattern("EEE, MMM dd").withZone(ZoneId.systemDefault()) }
+    val timeFormatter =
+        remember { DateTimeFormatter.ofPattern("h:mm a").withZone(ZoneId.systemDefault()) }
+
+    val dateText = remember(event.startTimestamp) {
+        val javaInstant = java.time.Instant.ofEpochMilli(event.startTimestamp.toEpochMilliseconds())
+        dateFormatter.format(javaInstant)
+    }
+    val timeText = remember(event.startTimestamp) {
+        val javaInstant = java.time.Instant.ofEpochMilli(event.startTimestamp.toEpochMilliseconds())
+        timeFormatter.format(javaInstant)
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(),
+                onClick = onDetailsClick
+            )
+    ) {
+        Column {
+            // Image
+            Box(modifier = Modifier.height(128.dp)) {
+                AsyncImage(
+                    model = event.coverImageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color(0x8C0D0F14)),
+                                startY = 60f
+                            )
+                        )
+                )
+                
+                // Title
+                Text(
+                    text = event.title,
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.2).sp,
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(start = 14.dp, bottom = 12.dp, end = 14.dp)
+                )
+            }
+
+            // Details
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.Schedule,
+                            contentDescription = null,
+                            modifier = Modifier.size(13.dp),
+                            tint = Color(0xFF737880)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = "$dateText · $timeText",
+                            fontSize = 13.sp,
+                            color = Color(0xFF737880)
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.Place,
+                            contentDescription = null,
+                            modifier = Modifier.size(13.dp),
+                            tint = Color(0xFF737880)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = event.address,
+                            fontSize = 13.sp,
+                            color = Color(0xFF737880),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.Group,
+                            contentDescription = null,
+                            modifier = Modifier.size(13.dp),
+                            tint = Color(0xFF737880)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        val maxText = event.maxAttendees?.let { "/$it" } ?: ""
+                        Text(
+                            text = "${event.attendeeCount}$maxText",
+                            fontSize = 13.sp,
+                            color = Color(0xFF737880)
+                        )
+                    }
+                    
+                    Text(
+                        text = if (event.isFree) "Free" else "${event.price} THB",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (event.isFree) Color(0xFF16A34A) else Color(0xFF0D0F14)
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun HostingEventCard(
     event: EventDto,
@@ -857,23 +1002,6 @@ fun CreateEventButton(onClick: () -> Unit) {
 }
 
 // Mock Data
-data class AttendingEventMock(
-    val id: Int,
-    val title: String,
-    val category: String,
-    val date: String,
-    val time: String,
-    val location: String,
-    val attendees: Int,
-    val maxAttendees: Int,
-    val price: String,
-    val status: String,
-    val image: String,
-    val hostAvatar: String,
-    val hostName: String,
-    val unread: Int
-)
-
 data class PastEvent(
     val id: Int,
     val title: String,
@@ -902,25 +1030,6 @@ val MOCK_PAST = listOf(
         attendees = 22,
         image = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=200&fit=crop&auto=format",
         rating = 4
-    )
-)
-
-val MOCK_SAVED = listOf(
-    AttendingEventMock(
-        id = 10,
-        title = "Art Gallery Exhibition",
-        category = "Arts",
-        date = "Sun, Jul 20",
-        time = "10:00 AM",
-        location = "Modern Art Museum",
-        attendees = 12,
-        maxAttendees = 100,
-        price = "Free",
-        status = "confirmed",
-        image = "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=400&h=280&fit=crop&auto=format",
-        hostAvatar = "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=60&h=60&fit=crop&auto=format",
-        hostName = "Elena Petrova",
-        unread = 0
     )
 )
 

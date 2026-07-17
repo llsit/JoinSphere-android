@@ -78,7 +78,6 @@ fun DiscoverScreen(
     onSearchClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val liked = remember { mutableStateListOf<String>() }
     val context = LocalContext.current
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -296,9 +295,9 @@ fun DiscoverScreen(
                         items(uiState.trending) { ev ->
                             FeaturedEventCard(
                                 event = ev,
-                                isLiked = liked.contains(ev.id),
+                                isLiked = uiState.favoriteEventIds.contains(ev.id),
                                 onLikeToggle = {
-                                    if (liked.contains(ev.id)) liked.remove(ev.id) else liked.add(ev.id)
+                                    viewModel.onIntent(DiscoverIntent.ToggleFavorite(ev.id))
                                 },
                                 onClick = { onEventClick(ev.id, ev.title, ev.coverImageUrl) }
                             )

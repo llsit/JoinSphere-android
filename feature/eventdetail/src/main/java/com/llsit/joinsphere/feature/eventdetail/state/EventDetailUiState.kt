@@ -8,6 +8,7 @@ data class EventDetailUiState(
     val isLoading: Boolean = false,
     val isJoining: Boolean = false,
     val isAttending: Boolean = false,
+    val isFavorite: Boolean = false,
     val event: EventDto? = null,
     val host: UserProfileDto? = null,
     val categories: List<Category> = emptyList(),

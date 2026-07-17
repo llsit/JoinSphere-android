@@ -3,6 +3,7 @@ package com.llsit.joinsphere.feature.discover
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.llsit.joinsphere.core.domain.repository.EventRepository
+import com.llsit.joinsphere.core.domain.repository.FavoriteRepository
 import com.llsit.joinsphere.core.domain.usecase.GetCurrentLocationUseCase
 import com.llsit.joinsphere.core.domain.usecase.GetDiscoverFeedsUseCase
 import com.llsit.joinsphere.core.model.Category
@@ -20,6 +21,7 @@ data class DiscoverUiState(
     val selectedCategoryId: String = "all",
     val trending: List<EventNetworkModel> = emptyList(),
     val thisWeek: List<EventNetworkModel> = emptyList(),
+    val favoriteEventIds: List<String> = emptyList(),
     val address: String = "ดึงข้อมูลตำแหน่ง...",
     val isLoading: Boolean = false,
     val error: String? = null
@@ -28,12 +30,14 @@ data class DiscoverUiState(
 sealed interface DiscoverIntent {
     data object Refresh : DiscoverIntent
     data class SelectCategory(val categoryId: String) : DiscoverIntent
+    data class ToggleFavorite(val eventId: String) : DiscoverIntent
 }
 
 class DiscoverViewModel(
     private val getDiscoverFeedsUseCase: GetDiscoverFeedsUseCase,
     private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val favoriteRepository: FavoriteRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DiscoverUiState())
@@ -41,7 +45,16 @@ class DiscoverViewModel(
 
     init {
         observeCategories()
+        observeFavorites()
         fetchFeeds()
+    }
+
+    private fun observeFavorites() {
+        favoriteRepository.observeFavorites()
+            .onEach { favorites ->
+                _uiState.update { it.copy(favoriteEventIds = favorites) }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun observeCategories() {
@@ -58,6 +71,18 @@ class DiscoverViewModel(
             is DiscoverIntent.SelectCategory -> {
                 _uiState.update { it.copy(selectedCategoryId = intent.categoryId) }
                 fetchFeeds()
+            }
+            is DiscoverIntent.ToggleFavorite -> toggleFavorite(intent.eventId)
+        }
+    }
+
+    private fun toggleFavorite(eventId: String) {
+        val isFavorite = _uiState.value.favoriteEventIds.contains(eventId)
+        viewModelScope.launch {
+            if (isFavorite) {
+                favoriteRepository.removeFavorite(eventId)
+            } else {
+                favoriteRepository.addFavorite(eventId)
             }
         }
     }

@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.llsit.joinsphere.core.domain.repository.AuthRepository
 import com.llsit.joinsphere.core.domain.repository.EventRepository
+import com.llsit.joinsphere.core.domain.repository.FavoriteRepository
 import com.llsit.joinsphere.core.domain.repository.ProfileRepository
 import com.llsit.joinsphere.feature.eventdetail.state.EventDetailUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -18,7 +20,8 @@ import kotlinx.coroutines.launch
 class EventDetailViewModel(
     private val eventRepository: EventRepository,
     private val profileRepository: ProfileRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val favoriteRepository: FavoriteRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EventDetailUiState())
@@ -26,6 +29,16 @@ class EventDetailViewModel(
 
     init {
         observeCategories()
+        observeFavoritesState()
+    }
+
+    private fun observeFavoritesState() {
+        favoriteRepository.observeFavorites()
+            .onEach { favorites ->
+                val eventId = uiState.value.event?.id
+                _uiState.update { it.copy(isFavorite = favorites.contains(eventId)) }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun observeCategories() {
@@ -45,10 +58,20 @@ class EventDetailViewModel(
                     _uiState.update { it.copy(event = event) }
                     fetchHostProfile(event.creatorId)
                     checkAttendingStatus(eventId)
+                    // Update favorite status immediately when event is loaded
+                    refreshFavoriteStatus()
                 }
                 .onFailure { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message) }
                 }
+        }
+    }
+
+    private fun refreshFavoriteStatus() {
+        viewModelScope.launch {
+            val favorites = favoriteRepository.observeFavorites().first()
+            val eventId = uiState.value.event?.id
+            _uiState.update { it.copy(isFavorite = favorites.contains(eventId)) }
         }
     }
 
@@ -109,6 +132,19 @@ class EventDetailViewModel(
                     Log.e("EventDetailViewModel", "CancelJoin Error : ${e.message}")
                     _uiState.update { it.copy(isJoining = false, error = e.message) }
                 }
+        }
+    }
+
+    fun toggleFavorite() {
+        val eventId = uiState.value.event?.id ?: return
+        val isFavorite = uiState.value.isFavorite
+
+        viewModelScope.launch {
+            if (isFavorite) {
+                favoriteRepository.removeFavorite(eventId)
+            } else {
+                favoriteRepository.addFavorite(eventId)
+            }
         }
     }
 
