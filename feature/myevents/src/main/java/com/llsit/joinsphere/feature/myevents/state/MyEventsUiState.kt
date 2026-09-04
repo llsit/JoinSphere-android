@@ -12,6 +12,12 @@ data class MyEventsUiState(
     val hostingEvents: List<EventDto> = emptyList(),
     val pastEvents: List<AttendingEvent> = emptyList(),
     val savedEvents: List<SavedEventDto> = emptyList(),
-    val isLoading: Boolean = false,
+    val isLoadingUpcoming: Boolean = false,
+    val isLoadingHosting: Boolean = false,
+    val isLoadingSaved: Boolean = false,
+    val isLoadingPast: Boolean = false,
     val error: String? = null
-)
+) {
+    val isLoading: Boolean
+        get() = isLoadingUpcoming || isLoadingHosting || isLoadingSaved || isLoadingPast
+}

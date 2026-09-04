@@ -6,6 +6,7 @@ import com.llsit.joinsphere.core.database.entity.toExternalModel
 import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.model.Category
 import com.llsit.joinsphere.core.model.DiscoverFeedsResponse
+import com.llsit.joinsphere.core.model.event.AttendingEvent
 import com.llsit.joinsphere.core.model.event.EventAttendeeDto
 import com.llsit.joinsphere.core.model.event.EventDto
 import com.llsit.joinsphere.core.model.event.MyEventsResponse
@@ -116,6 +117,15 @@ class EventRepositoryImpl(
                 put("p_user_id", userId)
             }
         ).decodeList<SavedEventDto>()
+    }
+
+    override suspend fun getPastEvents(userId: String): Result<List<AttendingEvent>> = runCatching {
+        supabase.postgrest.rpc(
+            "get_past_events",
+            buildJsonObject {
+                put("p_user_id", userId)
+            }
+        ).decodeList<AttendingEvent>()
     }
 
     override suspend fun joinEvent(eventId: String, userId: String): Result<Unit> = runCatching {

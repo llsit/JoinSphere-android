@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.llsit.joinsphere.core.domain.usecase.GetHostingEventsUseCase
+import com.llsit.joinsphere.core.domain.usecase.GetPastEventsUseCase
 import com.llsit.joinsphere.core.domain.usecase.GetSavedEventsUseCase
 import com.llsit.joinsphere.core.domain.usecase.GetUpcomingEventsUseCase
 import com.llsit.joinsphere.feature.myevents.state.MyEventsUiState
@@ -16,7 +17,8 @@ import kotlinx.coroutines.launch
 class MyEventsViewModel(
     private val getHostingEventsUseCase: GetHostingEventsUseCase,
     private val getUpcomingEventsUseCase: GetUpcomingEventsUseCase,
-    private val getSavedEventsUseCase: GetSavedEventsUseCase
+    private val getSavedEventsUseCase: GetSavedEventsUseCase,
+    private val getPastEventsUseCase: GetPastEventsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MyEventsUiState())
@@ -26,11 +28,12 @@ class MyEventsViewModel(
         loadHostingEvents()
         loadUpcomingEvents()
         loadSavedEvents()
+        loadPastEvents()
     }
 
     fun loadUpcomingEvents() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoadingUpcoming = true) }
             getUpcomingEventsUseCase()
                 .onSuccess { response ->
                     _uiState.update { 
@@ -39,41 +42,65 @@ class MyEventsViewModel(
                             tomorrowEvents = response.tomorrow,
                             thisWeekEvents = response.thisWeek,
                             laterEvents = response.later,
-                            isLoading = false
+                            isLoadingUpcoming = false
                         ) 
                     }
                 }
                 .onFailure { error ->
                     Log.e("MyEventsViewModel", "Error loading upcoming events: ${error.message}")
-                    _uiState.update { it.copy(error = error.message, isLoading = false) }
+                    _uiState.update { it.copy(error = error.message, isLoadingUpcoming = false) }
                 }
         }
     }
 
     fun loadHostingEvents() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoadingHosting = true) }
             getHostingEventsUseCase()
                 .onSuccess { events ->
-                    _uiState.update { it.copy(hostingEvents = events, isLoading = false) }
+                    _uiState.update { it.copy(hostingEvents = events, isLoadingHosting = false) }
                 }
                 .onFailure { error ->
                     Log.e("MyEventsViewModel", "MyEventsViewModel Error : ${error.message}")
-                    _uiState.update { it.copy(error = error.message, isLoading = false) }
+                    _uiState.update { it.copy(error = error.message, isLoadingHosting = false) }
                 }
         }
     }
 
     fun loadSavedEvents() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoadingSaved = true) }
             getSavedEventsUseCase()
                 .onSuccess { events ->
-                    _uiState.update { it.copy(savedEvents = events, isLoading = false) }
+                    _uiState.update { it.copy(savedEvents = events, isLoadingSaved = false) }
                 }
                 .onFailure { error ->
                     Log.e("MyEventsViewModel", "Error loading saved events: ${error.message}")
-                    _uiState.update { it.copy(error = error.message, isLoading = false) }
+                    _uiState.update { it.copy(error = error.message, isLoadingSaved = false) }
+                }
+        }
+    }
+
+    fun loadPastEvents() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingPast = true) }
+            getPastEventsUseCase()
+                .onSuccess { events ->
+                    _uiState.update {
+                        it.copy(
+                            pastEvents = events,
+                            isLoadingPast = false
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    Log.e("MyEventsViewModel", "Error loading past events: ${error.message}")
+                    _uiState.update {
+                        it.copy(
+                            error = error.message,
+                            isLoadingPast = false
+                        )
+                    }
                 }
         }
     }

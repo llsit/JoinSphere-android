@@ -307,16 +307,49 @@ fun MyEventsScreen(
                 }
 
                 MyEventsTab.Past -> {
-                    item {
-                        Text(
-                            text = "${MOCK_PAST.size} past events",
-                            fontSize = 13.sp,
-                            color = Color(0xFF737880),
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                    }
-                    items(MOCK_PAST) { event ->
-                        PastEventCard(event = event)
+                    if (uiState.isLoading && uiState.pastEvents.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    } else if (uiState.pastEvents.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No past events",
+                                    color = Color(0xFF737880),
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    } else {
+                        item {
+                            Text(
+                                text = "${uiState.pastEvents.size} past events",
+                                fontSize = 13.sp,
+                                color = Color(0xFF737880),
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                        }
+                        items(uiState.pastEvents) { event ->
+                            PastEventCard(
+                                event = event,
+                                onClick = {
+                                    onEventClick(event.id, event.title, event.coverImage)
+                                }
+                            )
+                        }
                     }
                 }
 
@@ -448,6 +481,7 @@ fun UpcomingEventCard(
                     color = when (event.eventState) {
                         EventState.LIVE -> Color(0xFFDC2626) // Red for live
                         EventState.STARTING_SOON -> Color(0xFFF59E0B) // Amber
+                        EventState.ENDED -> Color(0xFF737880) // Gray for ended
                         else -> Color(0xFF16A34A) // Green for upcoming
                     },
                     shape = RoundedCornerShape(16.dp),
@@ -919,16 +953,27 @@ fun HostingEventCard(
     }
 }
 
+@OptIn(ExperimentalTime::class)
 @Composable
-fun PastEventCard(event: PastEvent) {
+fun PastEventCard(
+    event: AttendingEvent,
+    onClick: () -> Unit
+) {
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("MMM dd, yyyy").withZone(ZoneId.systemDefault()) }
+    val dateText = remember(event.startTimestamp) {
+        val javaInstant = java.time.Instant.ofEpochMilli(event.startTimestamp.toEpochMilliseconds())
+        dateFormatter.format(javaInstant)
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .alpha(0.85f)
+            .clickable(onClick = onClick)
     ) {
         Row(modifier = Modifier.height(88.dp)) {
             AsyncImage(
-                model = event.image,
+                model = event.coverImage,
                 contentDescription = null,
                 modifier = Modifier
                     .width(88.dp)
@@ -948,7 +993,7 @@ fun PastEventCard(event: PastEvent) {
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = event.date,
+                    text = dateText,
                     fontSize = 12.sp,
                     color = Color(0xFF737880),
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -959,12 +1004,12 @@ fun PastEventCard(event: PastEvent) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row {
-                        repeat(event.rating) {
+                        repeat(5) {
                             Text(text = "⭐", fontSize = 13.sp)
                         }
                     }
                     Text(
-                        text = "${event.attendees} attended",
+                        text = "${event.attendeeCount} attended",
                         fontSize = 12.sp,
                         color = Color(0xFF737880)
                     )
@@ -1000,38 +1045,6 @@ fun CreateEventButton(onClick: () -> Unit) {
         }
     }
 }
-
-// Mock Data
-data class PastEvent(
-    val id: Int,
-    val title: String,
-    val date: String,
-    val location: String,
-    val attendees: Int,
-    val image: String,
-    val rating: Int
-)
-
-val MOCK_PAST = listOf(
-    PastEvent(
-        id = 5,
-        title = "Tech Founders Networking",
-        date = "May 30, 2026",
-        location = "Caltrain Area",
-        attendees = 45,
-        image = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=300&h=200&fit=crop&auto=format",
-        rating = 5
-    ),
-    PastEvent(
-        id = 6,
-        title = "Ferry Building Food Tour",
-        date = "May 17, 2026",
-        location = "Embarcadero",
-        attendees = 22,
-        image = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=200&fit=crop&auto=format",
-        rating = 4
-    )
-)
 
 @Preview(showBackground = true)
 @Composable

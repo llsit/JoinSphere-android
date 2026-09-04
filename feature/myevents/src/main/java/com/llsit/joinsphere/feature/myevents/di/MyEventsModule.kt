@@ -5,5 +5,5 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val myEventsModule = module {
-    viewModel { MyEventsViewModel(get(), get(), get()) }
+    viewModel { MyEventsViewModel(get(), get(), get(), get()) }
 }

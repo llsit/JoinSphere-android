@@ -4,6 +4,7 @@ import com.llsit.joinsphere.core.domain.repository.EventRepository
 import com.llsit.joinsphere.core.domain.repository.UserDataRepository
 import com.llsit.joinsphere.core.domain.usecase.CreateEventUseCase
 import com.llsit.joinsphere.core.domain.usecase.GetHostingEventsUseCase
+import com.llsit.joinsphere.core.domain.usecase.GetPastEventsUseCase
 import com.llsit.joinsphere.core.domain.usecase.GetSavedEventsUseCase
 import com.llsit.joinsphere.core.domain.usecase.GetUpcomingEventsUseCase
 import com.llsit.joinsphere.core.domain.usecase.LoginUseCase
@@ -22,5 +23,6 @@ val domainModule = module {
     factoryOf(::GetHostingEventsUseCase)
     factoryOf(::GetUpcomingEventsUseCase)
     factoryOf(::GetSavedEventsUseCase)
+    factoryOf(::GetPastEventsUseCase)
     factory { CreateEventUseCase(get<EventRepository>(), get<UserDataRepository>(), androidContext()) }
 }

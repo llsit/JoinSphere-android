@@ -30,6 +30,7 @@ interface EventRepository {
     suspend fun getHostingEvents(userId: String): Result<List<EventDto>>
     suspend fun getUpcomingEvents(): Result<MyEventsResponse>
     suspend fun getSavedEvents(userId: String): Result<List<SavedEventDto>>
+    suspend fun getPastEvents(userId: String): Result<List<AttendingEvent>>
     suspend fun joinEvent(eventId: String, userId: String): Result<Unit>
     suspend fun cancelJoinEvent(eventId: String, userId: String): Result<Unit>
     suspend fun isUserAttending(eventId: String, userId: String): Result<Boolean>
