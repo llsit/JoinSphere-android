@@ -1,0 +1,3 @@
+- `[x]` Fix badge color for `ENDED` state in `UpcomingEventCard`
+- `[ ]` Re-introduce granular loading states in `MyEventsUiState` and `ViewModel`
+- `[ ]` Final build verification
